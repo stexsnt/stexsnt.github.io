@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le raisonnement par récurrence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* Idée de mise en page : registre éditorial calme. Grands titres en serif fin, texte discret,
+   fond blanc cassé, filets fins, une seule teinte chaude (beurre) pour les énoncés clés.
+   Deux couleurs portent le sens partout : prune = initialisation, pétrole = hérédité. */
+:root{
+  --bg:#f4f3ef; --surface:#fbfaf7; --ink:#17181c; --muted:#6b6c72; --line:#dcdad3; --grid:#e9e7e0;
+  --init:#8a1c4a; --hered:#0f5e66; --pop:#f3e7a6; --on-pop:#17181c;
+  --ok:#1d6b4f; --no:#b3261e;
+  --display:"Instrument Serif","Iowan Old Style",Georgia,serif;
+  --body:"Instrument Sans","Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#111214; --surface:#191a1e; --ink:#eceae4; --muted:#a09f9a; --line:#2e2f35; --grid:#24252a;
+    --init:#eb8fb6; --hered:#74d0d4; --pop:#2b2816; --on-pop:#f3e7a6;
+    --ok:#7fd1ac; --no:#f08a80;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111214; --surface:#191a1e; --ink:#eceae4; --muted:#a09f9a; --line:#2e2f35; --grid:#24252a;
+  --init:#eb8fb6; --hered:#74d0d4; --pop:#2b2816; --on-pop:#f3e7a6;
+  --ok:#7fd1ac; --no:#f08a80;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
+.deck{position:relative;flex:1;min-height:0}
+.slide{position:absolute;inset:0;visibility:hidden;overflow-y:auto;
+  padding:clamp(18px,3.6vw,64px) clamp(18px,6vw,112px);
+  font-size:clamp(15px,min(1.6vw,2.75vh),26px);line-height:1.5;
+  display:flex;flex-direction:column;gap:.9em}
+.slide.on{visibility:visible}
+.eyebrow{font-size:.62em;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:500;display:flex;align-items:center;gap:.9em}
+.eyebrow::before{content:"";width:2.4em;height:1px;background:var(--muted)}
+h1,h2{font-family:var(--display);font-weight:400;line-height:1.02;letter-spacing:-.015em;margin:0;text-wrap:balance}
+h1{font-size:5.2em}
+h2{font-size:2.6em}
+h1 em,h2 em{font-style:italic;color:var(--init)}
+h3{font-family:var(--body);font-weight:600;font-size:.8em;letter-spacing:.06em;text-transform:uppercase;margin:0}
+p,ul,ol{margin:0}
+ul,ol{padding-left:1.1em;display:flex;flex-direction:column;gap:.45em}
+ul li::marker{color:var(--muted)}
+.lead{font-size:1.2em;max-width:30em;color:var(--muted)}
+.muted{color:var(--muted)}
+.i{color:var(--init);font-weight:600}
+.h{color:var(--hered);font-weight:600}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:2.4em;align-items:center;flex:1;min-height:0}
+.col{display:flex;flex-direction:column;gap:.8em}
+.center{flex:1;display:flex;flex-direction:column;justify-content:center;gap:1.1em}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:.9em 1.1em}
+.card.init{border-top:2px solid var(--init)}
+.card.hered{border-top:2px solid var(--hered)}
+.box{background:var(--pop);color:var(--on-pop);border-radius:14px;padding:.8em 1.1em;font-weight:500}
+.math{font-size:1.05em;overflow-x:auto;padding:.2em 0}
+.fig{display:flex;flex-direction:column;gap:.5em;align-items:center}
+.fig canvas{display:block;width:min(100%,calc(42vh * 16 / 10));aspect-ratio:16/10;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.ctl{display:flex;flex-wrap:wrap;gap:.5em 1.1em;align-items:center;justify-content:center;font-size:.72em;width:100%}
+.ctl label{display:flex;align-items:center;gap:.5em}
+.ctl input[type=range]{width:12em;accent-color:var(--ink)}
+.ctl input[type=checkbox]{accent-color:var(--ink);width:1.05em;height:1.05em}
+button{font:inherit;font-weight:500;color:var(--bg);background:var(--ink);border:1px solid var(--ink);border-radius:99em;padding:.3em 1.1em;cursor:pointer;transition:opacity .15s}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button:hover{opacity:.82}
+button:focus-visible,input:focus-visible{outline:2px solid var(--init);outline-offset:3px}
+.status{font-size:.78em;min-height:2.6em;text-align:center;max-width:32em;color:var(--muted)}
+.read{font-size:.72em;font-variant-numeric:tabular-nums;display:grid;grid-template-columns:auto auto;gap:.2em 1.2em;justify-content:center;margin:0}
+.read dt{color:var(--muted)}
+.read dd{margin:0;font-weight:600;text-align:right;min-width:5em}
+.legend{display:flex;gap:1.4em;font-size:.72em;flex-wrap:wrap;justify-content:center;color:var(--muted)}
+.legend i{display:inline-block;width:.7em;height:.7em;border-radius:50%;margin-right:.4em}
+.pill{display:inline-block;white-space:nowrap;font-family:var(--body);font-size:.7em;font-weight:600;letter-spacing:.02em;border-radius:99em;padding:.15em .9em;border:1px solid;vertical-align:middle}
+.pill.ok{color:var(--ok)} .pill.no{color:var(--no)}
+.steps{counter-reset:s;list-style:none;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1em}
+.steps.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.steps li{counter-increment:s;display:flex;flex-direction:column;gap:.4em}
+.steps li::before{content:counter(s,decimal-leading-zero);font-family:var(--display);font-style:italic;font-size:2em;line-height:1;color:var(--muted)}
+.steps p{font-size:.85em}
+.cells{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:.3em;width:min(100%,30em);font-size:.6em;font-variant-numeric:tabular-nums}
+.cells span{border:1px solid var(--line);border-radius:8px;text-align:center;padding:.35em 0;color:var(--muted)}
+.cells span.ok{border-color:var(--hered);color:var(--ink);background:var(--surface)}
+.cells span.no{border-color:var(--no);background:var(--no);color:var(--bg);font-weight:600}
+.big{font-family:var(--display);font-size:1.7em;line-height:1.2;font-variant-numeric:tabular-nums;text-align:center}
+.answer{visibility:hidden}
+.answer.shown{visibility:inherit}
+.src{font-size:.7em;color:var(--muted)}
+#notes{background:var(--surface);border-top:1px solid var(--line);padding:.8em clamp(18px,6vw,112px);font-size:clamp(14px,1.25vw,18px);max-height:26vh;overflow-y:auto;color:var(--muted)}
+#notes[hidden]{display:none}
+#notes b{font-family:var(--display);font-style:italic;font-weight:400;font-size:1.2em;color:var(--ink)}
+nav{display:flex;align-items:center;gap:.9em;padding:.6em clamp(18px,6vw,112px);border-top:1px solid var(--line);font-size:14px}
+nav button{background:transparent;color:var(--ink);border-color:var(--line);padding:.25em .9em}
+nav .count{font-variant-numeric:tabular-nums;color:var(--muted);min-width:4.5em;text-align:center}
+nav progress{flex:1;height:3px;accent-color:var(--ink);min-width:40px}
+@media (max-width:760px){
+  .two,.steps,.steps.three{grid-template-columns:1fr}
+  h1{font-size:2.9em} h2{font-size:2em}
+  nav .hint{display:none}
+}
+</style>
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
+</head>
+<body>
+<main class="deck" id="deck">
+
+<section class="slide" data-note="Annoncer l'enjeu : en Terminale, on rencontre des propriétés qui portent sur tous les entiers à la fois. La récurrence est l'outil qui permet de les démontrer toutes avec seulement deux arguments.">
+  <div class="center">
+    <p class="eyebrow">Terminale · Spécialité mathématiques</p>
+    <h1>Le raisonnement<br>par <em>récurrence</em></h1>
+    <p class="lead">Démontrer une infinité de propriétés avec deux arguments seulement.</p>
+  </div>
+</section>
+
+<section class="slide" data-note="Faire avancer le curseur lentement. Les élèves constatent que le nombre obtenu est premier pour n = 0, 1, 2… jusqu'à 40. À 41, tout s'effondre : 41² − 41 + 41 = 41². Message : quarante et une vérifications ne font pas une démonstration.">
+  <p class="eyebrow">Le problème</p>
+  <h2>Vérifier, est-ce <em>prouver</em> ?</h2>
+  <div class="two">
+    <div class="col">
+      <p>Affirmation : « pour tout entier naturel \(n\), le nombre \(n^2-n+41\) est premier ».</p>
+      <ul>
+        <li>On teste \(n=0\), \(n=1\), \(n=2\)… Tout semble confirmer.</li>
+        <li>Avancez le curseur jusqu'au bout.</li>
+      </ul>
+      <p class="box">Vérifier des cas, même très nombreux, ne prouve rien pour tous les entiers.</p>
+    </div>
+    <div class="fig" id="euler"></div>
+  </div>
+</section>
+
+<section class="slide" data-note="L'image de référence. Deux conditions : on pousse le premier domino, et chaque domino est assez proche du suivant pour le faire tomber. Lancer d'abord avec les deux conditions. Puis décocher l'une, puis l'autre, et faire prédire le résultat avant de lancer.">
+  <p class="eyebrow">L'idée</p>
+  <h2>Une file de <em>dominos</em></h2>
+  <div class="two">
+    <div class="col">
+      <p>Pour faire tomber toute la file, si longue soit-elle, il suffit de deux choses :</p>
+      <p class="card init"><span class="i">Le premier tombe.</span><br>Quelqu'un le pousse.</p>
+      <p class="card hered"><span class="h">Chacun entraîne le suivant.</span><br>Si un domino tombe, celui d'après tombe aussi.</p>
+      <p class="muted">Retirez une condition, puis l'autre, et relancez.</p>
+    </div>
+    <div class="fig" id="dom"></div>
+  </div>
+</section>
+
+<section class="slide" data-note="Traduire l'image. Le domino numéro n, c'est la propriété P(n). « Tomber » veut dire « être vraie ». Insister : l'hérédité ne dit pas que P(k) est vraie, elle dit que SI P(k) est vraie ALORS P(k+1) l'est aussi.">
+  <p class="eyebrow">Le principe</p>
+  <h2>Des dominos aux propriétés</h2>
+  <div class="center">
+    <p>Soit \(P(n)\) une propriété qui dépend d'un entier naturel \(n\), et \(n_0\) un entier naturel.</p>
+    <p class="card init"><span class="i">Initialisation.</span> \(P(n_0)\) est vraie.</p>
+    <p class="card hered"><span class="h">Hérédité.</span> Pour tout entier \(k\geqslant n_0\) : si \(P(k)\) est vraie, alors \(P(k+1)\) est vraie.</p>
+    <p class="box">Alors \(P(n)\) est vraie pour tout entier \(n\geqslant n_0\).</p>
+  </div>
+</section>
+
+<section class="slide" data-note="La rédaction attendue au baccalauréat. Quatre temps, toujours dans cet ordre. Dans l'hérédité, écrire explicitement l'hypothèse de récurrence et ce qu'on veut obtenir : c'est ce qui évite de tourner en rond.">
+  <p class="eyebrow">La méthode</p>
+  <h2>Une rédaction en quatre temps</h2>
+  <div class="center">
+    <ol class="steps">
+      <li class="card"><h3>Énoncer</h3><p>Écrire clairement la propriété \(P(n)\) et préciser pour quels \(n\).</p></li>
+      <li class="card init"><h3 class="i">Initialiser</h3><p>Vérifier \(P(n_0)\) par un calcul direct.</p></li>
+      <li class="card hered"><h3 class="h">Hérédité</h3><p>Fixer \(k\geqslant n_0\), supposer \(P(k)\) vraie (hypothèse de récurrence), en déduire \(P(k+1)\).</p></li>
+      <li class="card"><h3>Conclure</h3><p>Citer le principe de récurrence : \(P(n)\) est vraie pour tout \(n\geqslant n_0\).</p></li>
+    </ol>
+    <p class="muted">Dans l'hérédité, on écrit toujours ce qu'on suppose et ce qu'on veut démontrer avant de calculer.</p>
+  </div>
+</section>
+
+<section class="slide" data-note="Premier exemple. L'escalier montre la somme 1 + 2 + … + n. Faire varier n : passer de n à n + 1, c'est ajouter une colonne de n + 1 carreaux. C'est exactement ce qui se passera dans l'hérédité. Faire constater que la formule donne toujours le bon total.">
+  <p class="eyebrow">Exemple 1 · Voir</p>
+  <h2>La somme des premiers entiers</h2>
+  <div class="two">
+    <div class="col">
+      <p>On veut démontrer que, pour tout entier \(n\geqslant 1\) :</p>
+      <div class="math">\[1+2+\dots+n=\frac{n(n+1)}{2}\]</div>
+      <ul>
+        <li>Chaque colonne de l'escalier compte un carreau de plus que la précédente.</li>
+        <li>Passer de \(n\) à \(n+1\), c'est ajouter la <span class="i">colonne de \(n+1\) carreaux</span>.</li>
+      </ul>
+    </div>
+    <div class="fig" id="esc"></div>
+  </div>
+</section>
+
+<section class="slide" data-note="La rédaction complète. Dans l'hérédité, on isole la somme jusqu'à k pour pouvoir utiliser l'hypothèse de récurrence, puis on factorise par k + 1. Faire remarquer que c'est la colonne ajoutée de la diapositive précédente.">
+  <p class="eyebrow">Exemple 1 · Rédiger</p>
+  <h2>La démonstration</h2>
+  <div class="two" style="align-items:start">
+    <div class="col">
+      <p>\(P(n)\) : « \(1+2+\dots+n=\dfrac{n(n+1)}{2}\) », pour \(n\geqslant 1\).</p>
+      <p class="card init"><span class="i">Initialisation.</span> Pour \(n=1\) : la somme vaut \(1\) et \(\dfrac{1\times 2}{2}=1\). \(P(1)\) est vraie.</p>
+      <p class="box">Conclusion : \(P(n)\) est vraie pour tout entier \(n\geqslant 1\).</p>
+    </div>
+    <div class="card hered col">
+      <p><span class="h">Hérédité.</span> Soit \(k\geqslant 1\). On suppose \(P(k)\) vraie. On veut : \(1+\dots+(k+1)=\dfrac{(k+1)(k+2)}{2}\).</p>
+      <div class="math">\[\begin{aligned}1+\dots+k+(k+1)&=\frac{k(k+1)}{2}+(k+1)\\[.3em]&=(k+1)\left(\frac{k}{2}+1\right)\\[.3em]&=\frac{(k+1)(k+2)}{2}\end{aligned}\]</div>
+      <p>Donc \(P(k+1)\) est vraie.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-note="Inégalité de Bernoulli, démonstration exigible du programme. Faire varier a : les points magenta (la puissance) restent toujours au-dessus des points turquoise (la droite), et l'écart se creuse. On le constate, il reste à le prouver.">
+  <p class="eyebrow">Exemple 2 · Voir</p>
+  <h2>L'inégalité de Bernoulli</h2>
+  <div class="two">
+    <div class="col">
+      <p>Soit \(a\) un réel strictement positif. Pour tout entier naturel \(n\) :</p>
+      <div class="math">\[(1+a)^n\geqslant 1+na\]</div>
+      <ul>
+        <li>Les termes <span class="i">\((1+a)^n\)</span> restent au-dessus des termes <span class="h">\(1+na\)</span>.</li>
+        <li>Faites varier \(a\) : l'ordre ne change jamais.</li>
+      </ul>
+    </div>
+    <div class="fig" id="bern"></div>
+  </div>
+</section>
+
+<section class="slide" data-note="Point clé de l'hérédité : on multiplie les deux membres de l'hypothèse par 1 + a, qui est strictement positif, donc le sens de l'inégalité est conservé. Puis on minore en retirant le terme k a², qui est positif.">
+  <p class="eyebrow">Exemple 2 · Rédiger</p>
+  <h2>Bernoulli, la démonstration</h2>
+  <div class="two" style="align-items:start">
+    <div class="col">
+      <p>\(P(n)\) : « \((1+a)^n\geqslant 1+na\) », pour \(n\geqslant 0\).</p>
+      <p class="card init"><span class="i">Initialisation.</span> Pour \(n=0\) : \((1+a)^0=1\) et \(1+0\times a=1\). On a bien \(1\geqslant 1\).</p>
+      <p class="box">Conclusion : \(P(n)\) est vraie pour tout entier naturel \(n\).</p>
+    </div>
+    <div class="card hered col">
+      <p><span class="h">Hérédité.</span> Soit \(k\geqslant 0\). On suppose \((1+a)^k\geqslant 1+ka\). Comme \(1+a>0\), on multiplie sans changer le sens :</p>
+      <div class="math">\[\begin{aligned}(1+a)^{k+1}&\geqslant(1+ka)(1+a)\\[.3em]&=1+(k+1)a+ka^2\\[.3em]&\geqslant 1+(k+1)a\end{aligned}\]</div>
+      <p>car \(ka^2\geqslant 0\). Donc \(P(k+1)\) est vraie.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-note="Premier piège : oublier l'initialisation. Ici l'hérédité se démontre parfaitement, et pourtant la propriété est fausse pour tous les entiers. Ce sont des dominos bien alignés que personne n'a poussés. Revenir à la figure des dominos si besoin.">
+  <p class="eyebrow">Piège 1</p>
+  <h2>L'hérédité sans l'initialisation</h2>
+  <div class="two" style="align-items:start">
+    <div class="card hered col">
+      <p>\(P(n)\) : « \(10^n+1\) est un multiple de 9 ».</p>
+      <p><span class="h">L'hérédité fonctionne.</span> Si \(10^k+1=9m\) avec \(m\) entier, alors :</p>
+      <div class="math">\[\begin{aligned}10^{k+1}+1&=10\,(10^k+1)-9\\&=90m-9=9\,(10m-1)\end{aligned}\]</div>
+    </div>
+    <div class="col">
+      <p class="card init"><span class="i">Mais l'initialisation échoue.</span> \(10^0+1=2\), qui n'est pas un multiple de 9.</p>
+      <p>En réalité \(10^n+1\) s'écrit \(2\), \(11\), \(101\), \(1001\)… La somme des chiffres vaut toujours 2 : ce n'est <b>jamais</b> un multiple de 9.</p>
+      <p class="box">Des dominos bien alignés, mais personne ne pousse le premier.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-note="Second piège, et l'erreur de rédaction la plus fréquente : écrire « supposons P(n) vraie pour tout n ». C'est supposer ce qu'on veut démontrer. On fixe UN entier k, et on suppose P(k) pour cet entier-là seulement.">
+  <p class="eyebrow">Piège 2</p>
+  <h2>L'initialisation sans l'hérédité</h2>
+  <div class="center">
+    <p>Pour \(n^2-n+41\), les premiers cas étaient vrais, mais aucun argument ne faisait passer d'un rang au suivant : la chaîne s'est rompue à \(n=41\).</p>
+    <div class="two" style="flex:none;align-items:stretch">
+      <div class="card col"><span class="pill no">À ne pas écrire</span><p>« Supposons \(P(n)\) vraie pour tout \(n\). »</p><p class="muted">C'est supposer exactement ce qu'on veut démontrer.</p></div>
+      <div class="card hered col"><span class="pill ok">À écrire</span><p>« Soit \(k\) un entier, \(k\geqslant n_0\). Supposons \(P(k)\) vraie. »</p><p class="muted">Un seul rang, fixé mais quelconque.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-note="Exercice type bac sur une suite définie par récurrence. Laisser dix minutes. Insister sur la rédaction en quatre temps. L'hérédité tient en une ligne : on part de l'hypothèse, on divise par 2, on ajoute 3.">
+  <p class="eyebrow">À vous</p>
+  <h2>Une suite majorée</h2>
+  <div class="two" style="align-items:start">
+    <div class="col">
+      <p>La suite \((u_n)\) est définie par \(u_0=2\) et, pour tout entier naturel \(n\) :</p>
+      <div class="math">\[u_{n+1}=\frac{1}{2}\,u_n+3\]</div>
+      <p>Démontrer par récurrence que, pour tout entier naturel \(n\), \(u_n\leqslant 6\).</p>
+      <p><button type="button" class="reveal" data-target="r1">Afficher la correction</button></p>
+    </div>
+    <div class="answer col" id="r1">
+      <p>\(P(n)\) : « \(u_n\leqslant 6\) ».</p>
+      <p class="card init"><span class="i">Initialisation.</span> \(u_0=2\) et \(2\leqslant 6\) : \(P(0)\) est vraie.</p>
+      <p class="card hered"><span class="h">Hérédité.</span> Soit \(k\geqslant 0\) tel que \(u_k\leqslant 6\). Alors \(\frac12 u_k\leqslant 3\), donc \(\frac12 u_k+3\leqslant 6\), c'est-à-dire \(u_{k+1}\leqslant 6\).</p>
+      <p class="box">Conclusion : pour tout entier naturel \(n\), \(u_n\leqslant 6\).</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-note="Conclure en revenant à l'image des dominos. Les deux étapes sont indispensables, et la conclusion doit citer le principe de récurrence. Rappeler la phrase à ne jamais écrire.">
+  <p class="eyebrow">Bilan</p>
+  <h2>À <em>retenir</em></h2>
+  <div class="center">
+    <ol class="steps three">
+      <li class="card init"><h3 class="i">Initialisation</h3><p>On vérifie la propriété au premier rang. Sans elle, rien ne démarre.</p></li>
+      <li class="card hered"><h3 class="h">Hérédité</h3><p>On fixe un rang \(k\), on suppose \(P(k)\), on démontre \(P(k+1)\). Sans elle, rien ne se propage.</p></li>
+      <li class="card"><h3>Conclusion</h3><p>Les deux étapes réunies donnent \(P(n)\) pour tout \(n\geqslant n_0\).</p></li>
+    </ol>
+    <p class="box">On ne suppose jamais \(P(n)\) « pour tout \(n\) » : on la suppose pour un seul rang \(k\).</p>
+  </div>
+</section>
+
+</main>
+
+<aside id="notes" hidden aria-live="polite"></aside>
+<nav aria-label="Navigation du diaporama">
+  <button type="button" id="prev" aria-label="Diapositive précédente">←</button>
+  <span class="count" id="count"></span>
+  <button type="button" id="next" aria-label="Diapositive suivante">→</button>
+  <progress id="prog" value="1" max="13" aria-label="Avancement"></progress>
+  <span class="hint muted">Flèches du clavier pour naviguer</span>
+  <button type="button" id="notesBtn" aria-pressed="false">Notes (N)</button>
+</nav>
+
+<script>
+(function(){
+"use strict";
+var css=function(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();};
+var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fr(x,d){return x.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}).replace('-','−');}
+function el(tag,attrs,html){var e=document.createElement(tag),k;for(k in attrs)e.setAttribute(k,attrs[k]);if(html!==undefined)e.innerHTML=html;return e;}
+function fit(canvas){
+  var r=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  if(r.width<2) return null;
+  canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);
+  var c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,r.width,r.height);
+  return {c:c,W:r.width,H:r.height};
+}
+var figures=[];
+
+/* ---------- n² − n + 41 ---------- */
+(function(){
+  var host=document.getElementById('euler'),MAX=47;
+  function factor(v){for(var d=2;d*d<=v;d++)if(v%d===0)return d;return 0;}
+  var big=el('p',{'class':'big','aria-live':'polite'});
+  var ctl=el('div',{'class':'ctl'},'<label for="euler-n">n <input type="range" id="euler-n" min="0" max="'+MAX+'" value="0"></label>');
+  var cells=el('div',{'class':'cells','aria-hidden':'true'});
+  var i,spans=[];
+  for(i=0;i<=MAX;i++){spans.push(el('span',{},String(i)));cells.appendChild(spans[i]);}
+  host.appendChild(big);host.appendChild(ctl);host.appendChild(cells);
+  var slider=ctl.querySelector('input');
+  function draw(){
+    var n=+slider.value,v=n*n-n+41,d=factor(v);
+    big.innerHTML='n = '+n+' : '+fr(v,0)+' '+(d?'<span class="pill no">= '+d+' × '+(v/d)+', pas premier</span>':'<span class="pill ok">premier</span>');
+    for(var k=0;k<=MAX;k++){
+      var dk=factor(k*k-k+41);
+      spans[k].className=k<=n?(dk?'no':'ok'):'';
+    }
+  }
+  slider.addEventListener('input',draw);draw();
+})();
+
+/* ---------- dominos ---------- */
+(function(){
+  var host=document.getElementById('dom'),N=12,CUT=6,DUR=380,DEL=190;
+  var canvas=el('canvas',{role:'img','aria-label':'File de douze dominos numérotés qui tombent en chaîne selon les conditions choisies'});
+  var ctl=el('div',{'class':'ctl'},
+    '<label for="dom-i"><input type="checkbox" id="dom-i" checked> On pousse le premier</label>'+
+    '<label for="dom-h"><input type="checkbox" id="dom-h" checked> Chacun entraîne le suivant</label>');
+  var go=el('button',{type:'button',id:'dom-go'},'Lancer');
+  var up=el('button',{type:'button',id:'dom-up','class':'ghost'},'Relever');
+  ctl.appendChild(go);ctl.appendChild(up);
+  var status=el('p',{'class':'status','aria-live':'polite'},'Choisissez les conditions, puis lancez.');
+  host.appendChild(canvas);host.appendChild(ctl);host.appendChild(status);
+  var ci=document.getElementById('dom-i'),ch=document.getElementById('dom-h');
+  var t=-1,raf=0,start=null;
+  function reach(){return ci.checked?(ch.checked?N-1:CUT-1):-1;}
+  function draw(){
+    var g=fit(canvas);if(!g)return;
+    var c=g.c,W=g.W,H=g.H,sp=W/(N+3.6),h=Math.min(sp*2.2,H*0.6),wd=Math.max(5,sp*0.26),ground=H*0.8,R=reach(),i;
+    c.strokeStyle=css('--ink');c.lineWidth=2;c.beginPath();c.moveTo(0,ground);c.lineTo(W,ground);c.stroke();
+    c.font='13px '+css('--body');c.textAlign='center';c.textBaseline='top';
+    for(i=0;i<N;i++){
+      var x=sp*0.9+i*sp+((!ch.checked&&i>=CUT)?sp*1.5:0),ang=0;
+      if(t>=0&&i<=R){var u=Math.max(0,Math.min(1,(t-i*DEL)/DUR));ang=u*u*(i===R?Math.PI/2:1.08);}
+      c.save();c.translate(x,ground);c.rotate(ang);
+      c.fillStyle=ang>0?css('--hered'):(i===0?css('--init'):css('--ink'));
+      if(i===0&&ang>0)c.fillStyle=css('--init');
+      c.fillRect(-wd/2,-h,wd,h);c.restore();
+      c.fillStyle=css('--muted');c.fillText(String(i),x,ground+8);
+    }
+    c.fillText('…',W-sp*0.5,ground+8);
+    if(!ch.checked){c.fillStyle=css('--no');c.fillText('trop loin',sp*0.9+(CUT-1)*sp+sp*1.25,ground+26);}
+  }
+  function end(){
+    var R=reach();
+    status.textContent=R<0?'Aucun domino ne tombe : personne n’a poussé le premier.':
+      (R<N-1?'Les dominos 0 à '+R+' tombent, puis la chaîne s’arrête : le domino '+R+' n’atteint pas le suivant.':
+      'Tous les dominos tombent, aussi longue que soit la file.');
+  }
+  function stop(){if(raf){cancelAnimationFrame(raf);raf=0;}}
+  function reset(){stop();t=-1;status.textContent='Choisissez les conditions, puis lancez.';draw();}
+  go.addEventListener('click',function(){
+    stop();var total=N*DEL+DUR;
+    if(reduce||reach()<0){t=total;draw();end();return;}
+    start=null;status.textContent='';
+    (function step(ts){
+      if(start===null)start=ts;t=ts-start;draw();
+      if(t<(reach()+1)*DEL+DUR)raf=requestAnimationFrame(step);else{raf=0;end();}
+    })(performance.now());
+  });
+  up.addEventListener('click',reset);ci.addEventListener('change',reset);ch.addEventListener('change',reset);
+  figures.push(draw);
+})();
+
+/* ---------- escalier 1 + 2 + … + n ---------- */
+(function(){
+  var host=document.getElementById('esc'),MAXN=12;
+  var canvas=el('canvas',{role:'img','aria-label':'Escalier de carreaux : la colonne numéro j contient j carreaux'});
+  var ctl=el('div',{'class':'ctl'},'<label for="esc-n">n <input type="range" id="esc-n" min="1" max="'+MAXN+'" value="6"></label>');
+  var read=el('dl',{'class':'read'});
+  host.appendChild(canvas);host.appendChild(ctl);host.appendChild(read);
+  var slider=ctl.querySelector('input');
+  function draw(){
+    var g=fit(canvas);if(!g)return;
+    var c=g.c,W=g.W,H=g.H,n=+slider.value,cell=Math.min((W-30)/MAXN,(H-34)/MAXN),x0=(W-cell*MAXN)/2,y0=H-10,j,k;
+    c.font='12px '+css('--body');c.textAlign='center';c.textBaseline='bottom';
+    for(j=1;j<=n;j++){
+      c.fillStyle=j===n?css('--init'):css('--hered');
+      for(k=0;k<j;k++){c.fillRect(x0+(j-1)*cell+1,y0-(k+1)*cell+1,cell-2,cell-2);}
+      c.fillStyle=css('--ink');c.fillText(String(j),x0+(j-0.5)*cell,y0-j*cell-3);
+    }
+    var s=n*(n+1)/2;
+    read.innerHTML='<dt>1 + 2 + … + '+n+'</dt><dd>'+s+'</dd><dt>'+n+' × '+(n+1)+' ÷ 2</dt><dd>'+s+'</dd><dt>Dernière colonne ajoutée</dt><dd>'+n+' carreaux</dd>';
+  }
+  slider.addEventListener('input',draw);
+  figures.push(draw);
+})();
+
+/* ---------- Bernoulli ---------- */
+(function(){
+  var host=document.getElementById('bern'),NN=10;
+  var canvas=el('canvas',{role:'img','aria-label':'Pour n de 0 à 10, les points (1 + a) puissance n sont au-dessus des points 1 + n a'});
+  var ctl=el('div',{'class':'ctl'},'<label for="bern-a">a <input type="range" id="bern-a" min="5" max="50" step="5" value="30"></label>');
+  var legend=el('div',{'class':'legend'},'<span><i style="background:var(--init)"></i>(1 + a)<sup>n</sup></span><span><i style="background:var(--hered)"></i>1 + na</span>');
+  var read=el('dl',{'class':'read'});
+  host.appendChild(canvas);host.appendChild(legend);host.appendChild(ctl);host.appendChild(read);
+  var slider=ctl.querySelector('input');
+  function draw(){
+    var g=fit(canvas);if(!g)return;
+    var c=g.c,W=g.W,H=g.H,a=+slider.value/100,L=40,B=26,T=14,Rr=14,n,v;
+    var top=Math.pow(1+a,NN),p=Math.pow(10,Math.floor(Math.log10(top/4))),m=top/4/p,step=(m<1.5?1:m<3.5?2:m<7.5?5:10)*p,ymax=Math.ceil(top/step)*step;
+    var X=function(n){return L+(W-L-Rr)*n/NN;},Y=function(y){return H-B-(H-B-T)*y/ymax;};
+    c.font='12px '+css('--body');c.fillStyle=css('--muted');c.lineWidth=1;
+    for(v=0;v<=ymax+1e-9;v+=step){c.strokeStyle=css('--grid');c.beginPath();c.moveTo(L,Y(v));c.lineTo(W-Rr,Y(v));c.stroke();c.textAlign='right';c.textBaseline='middle';c.fillText(fr(v,step<1?1:0),L-6,Y(v));}
+    c.textAlign='center';c.textBaseline='top';
+    for(n=0;n<=NN;n++)c.fillText(String(n),X(n),H-B+6);
+    c.strokeStyle=css('--ink');c.lineWidth=1.5;c.beginPath();c.moveTo(L,T);c.lineTo(L,H-B);c.lineTo(W-Rr,H-B);c.stroke();
+    c.strokeStyle=css('--hered');c.lineWidth=2;c.beginPath();c.moveTo(X(0),Y(1));c.lineTo(X(NN),Y(1+NN*a));c.stroke();
+    for(n=0;n<=NN;n++){
+      c.fillStyle=css('--hered');c.beginPath();c.arc(X(n),Y(1+n*a),4.5,0,6.2832);c.fill();
+      c.fillStyle=css('--init');c.beginPath();c.arc(X(n),Y(Math.pow(1+a,n)),5.5,0,6.2832);c.fill();
+    }
+    read.innerHTML='<dt>a</dt><dd>'+fr(a,2)+'</dd><dt>(1 + a)<sup>10</sup></dt><dd>'+fr(top,2)+'</dd><dt>1 + 10a</dt><dd>'+fr(1+10*a,2)+'</dd>';
+  }
+  slider.addEventListener('input',draw);
+  figures.push(draw);
+})();
+
+function redraw(){figures.forEach(function(d){d();});}
+
+/* ---------- navigation ---------- */
+var slides=[].slice.call(document.querySelectorAll('.slide')),cur=0;
+var count=document.getElementById('count'),prog=document.getElementById('prog'),notes=document.getElementById('notes'),notesBtn=document.getElementById('notesBtn');
+prog.max=slides.length;
+function show(i,fromHash){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach(function(s,k){s.classList.toggle('on',k===cur);s.setAttribute('aria-hidden',k===cur?'false':'true');});
+  count.textContent=(cur+1)+' / '+slides.length;prog.value=cur+1;
+  notes.innerHTML='<b>À dire.</b> '+(slides[cur].dataset.note||'');
+  if(!fromHash){try{history.replaceState(null,'','#diapo-'+(cur+1));}catch(e){}}
+}
+function fromHash(){var m=/^#diapo-(\d+)$/.exec(location.hash);show(m?parseInt(m[1],10)-1:0,true);}
+function toggleNotes(){notes.hidden=!notes.hidden;notesBtn.setAttribute('aria-pressed',String(!notes.hidden));redraw();}
+document.getElementById('prev').addEventListener('click',function(){show(cur-1);});
+document.getElementById('next').addEventListener('click',function(){show(cur+1);});
+notesBtn.addEventListener('click',toggleNotes);
+document.addEventListener('keydown',function(e){
+  var tag=e.target.tagName;
+  if(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'){show(cur+1);e.preventDefault();}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){show(cur-1);e.preventDefault();}
+  else if(e.key==='n'||e.key==='N'){toggleNotes();}
+});
+document.querySelectorAll('.reveal').forEach(function(b){
+  var label=b.textContent;
+  b.addEventListener('click',function(){
+    var on=document.getElementById(b.dataset.target).classList.toggle('shown');
+    b.textContent=on?'Masquer':label;
+  });
+});
+window.addEventListener('hashchange',fromHash);
+window.addEventListener('resize',redraw);
+if(window.matchMedia){var mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',redraw);}
+new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+fromHash();redraw();
+})();
+</script>
+</body>
+</html>
