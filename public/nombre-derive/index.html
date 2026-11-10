@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Le nombre dérivé, du zoom à la limite</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
 <style>
 /* Idée de mise en page : un diaporama plein écran, texte à gauche, figure manipulable à droite.
    Deux couleurs portent le sens partout : bleu = la courbe, orange = la droite. */
@@ -13,7 +13,7 @@
   --bg:#f3f5fa; --surface:#ffffff; --ink:#16213a; --muted:#566280; --line:#d3dae8; --grid:#e4e9f2;
   --curve:#2447c9; --droite:#c9570a; --ok:#0f7a57; --no:#bf2f3d;
   --display:"Bricolage Grotesque","Trebuchet MS",sans-serif;
-  --body:"Atkinson Hyperlegible",Verdana,sans-serif;
+  --body:"Figtree",Verdana,sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -82,7 +82,7 @@ th{font-family:var(--display);font-weight:500}
 .steps li{counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:.4em;padding:.8em}
 .steps li::before{content:counter(s);display:block;font-family:var(--display);font-size:1.6em;color:var(--droite)}
 .answer{visibility:hidden}
-.answer.shown{visibility:visible}
+.answer.shown{visibility:inherit}
 .src{font-size:.7em;color:var(--muted)}
 a{color:var(--curve)}
 /* barre de navigation */
