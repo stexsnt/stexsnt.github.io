@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le nombre dérivé, du zoom à la limite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+/* Idée de mise en page : un diaporama plein écran, texte à gauche, figure manipulable à droite.
+   Deux couleurs portent le sens partout : bleu = la courbe, orange = la droite. */
+:root{
+  --bg:#f3f5fa; --surface:#ffffff; --ink:#16213a; --muted:#566280; --line:#d3dae8; --grid:#e4e9f2;
+  --curve:#2447c9; --droite:#c9570a; --ok:#0f7a57; --no:#bf2f3d;
+  --display:"Bricolage Grotesque","Trebuchet MS",sans-serif;
+  --body:"Atkinson Hyperlegible",Verdana,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0f1525; --surface:#182038; --ink:#e9edf7; --muted:#a0abc5; --line:#2f3a58; --grid:#222c46;
+    --curve:#93abff; --droite:#ffa45c; --ok:#55d3a5; --no:#ff8a94;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0f1525; --surface:#182038; --ink:#e9edf7; --muted:#a0abc5; --line:#2f3a58; --grid:#222c46;
+  --curve:#93abff; --droite:#ffa45c; --ok:#55d3a5; --no:#ff8a94;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);display:flex;flex-direction:column;overflow:hidden}
+.deck{position:relative;flex:1;min-height:0}
+.slide{position:absolute;inset:0;visibility:hidden;overflow-y:auto;
+  padding:clamp(16px,3.2vw,56px) clamp(16px,5vw,96px);
+  font-size:clamp(15px,min(1.7vw,2.9vh),28px);line-height:1.45;
+  display:flex;flex-direction:column;gap:.9em}
+.slide.on{visibility:visible}
+.eyebrow{font-size:.72em;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+h1,h2{font-family:var(--display);font-weight:700;line-height:1.08;margin:0;text-wrap:balance}
+h1{font-size:3.4em}
+h2{font-size:1.9em}
+h3{font-family:var(--display);font-weight:500;font-size:1.1em;margin:0}
+p,ul,ol{margin:0}
+ul,ol{padding-left:1.2em;display:flex;flex-direction:column;gap:.45em}
+.lead{font-size:1.25em;max-width:34em}
+.muted{color:var(--muted)}
+.c{color:var(--curve);font-weight:700}
+.d{color:var(--droite);font-weight:700}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:2em;align-items:center;flex:1;min-height:0}
+.col{display:flex;flex-direction:column;gap:.8em}
+.center{flex:1;display:flex;flex-direction:column;justify-content:center;gap:1em}
+.box{background:var(--surface);border:1px solid var(--line);border-left:.3em solid var(--droite);border-radius:.4em;padding:.8em 1em}
+.box.def{border-left-color:var(--curve)}
+.math{font-size:1.1em;overflow-x:auto;padding:.2em 0}
+/* figures */
+.fig{display:flex;flex-direction:column;gap:.35em;align-items:center}
+.fig canvas{display:block;width:min(100%,calc(44vh * 4 / 3));aspect-ratio:4/3;background:var(--surface);border:1px solid var(--line);border-radius:.4em}
+.ctl{display:flex;flex-wrap:wrap;gap:.6em 1em;align-items:center;justify-content:center;font-size:.72em;width:100%}
+.ctl label{display:flex;align-items:center;gap:.5em}
+.ctl input[type=range]{width:12em;accent-color:var(--droite)}
+.ctl select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:.3em;padding:.2em .4em}
+button{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--muted);border-radius:.35em;padding:.3em .8em;cursor:pointer}
+button:hover{border-color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--droite);outline-offset:2px}
+.read{font-size:.7em;line-height:1.3;font-variant-numeric:tabular-nums;display:grid;grid-template-columns:auto auto;gap:.15em 1em;justify-content:center}
+.read dt{color:var(--muted)}
+.read dd{margin:0;font-weight:700;text-align:right;min-width:6em}
+/* cartes des trois cas */
+.cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1em}
+.case{background:var(--surface);border:1px solid var(--line);border-radius:.4em;padding:.9em;display:flex;flex-direction:column;gap:.5em}
+.case svg{width:100%;height:4.2em}
+.case svg *{fill:none;stroke:var(--curve);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.pill{align-self:flex-start;font-size:.75em;font-weight:700;border-radius:99em;padding:.15em .8em;border:2px solid}
+.pill.ok{color:var(--ok)} .pill.no{color:var(--no)}
+.case p{font-size:.85em}
+table{border-collapse:collapse;width:100%;font-size:.85em;background:var(--surface)}
+th,td{border:1px solid var(--line);padding:.55em .7em;text-align:left;vertical-align:top}
+th{font-family:var(--display);font-weight:500}
+.tablewrap{overflow-x:auto}
+.steps{counter-reset:s;list-style:none;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1em}
+.steps li{counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:.4em;padding:.8em}
+.steps li::before{content:counter(s);display:block;font-family:var(--display);font-size:1.6em;color:var(--droite)}
+.answer{visibility:hidden}
+.answer.shown{visibility:visible}
+.src{font-size:.7em;color:var(--muted)}
+a{color:var(--curve)}
+/* barre de navigation */
+#notes{background:var(--surface);border-top:1px solid var(--line);padding:.7em clamp(16px,5vw,96px);font-size:clamp(14px,1.3vw,19px);max-height:26vh;overflow-y:auto}
+#notes[hidden]{display:none}
+#notes b{font-family:var(--display)}
+nav{display:flex;align-items:center;gap:.8em;padding:.5em clamp(16px,5vw,96px);border-top:1px solid var(--line);background:var(--surface);font-size:15px}
+nav .count{font-variant-numeric:tabular-nums;color:var(--muted);min-width:4.5em;text-align:center}
+nav progress{flex:1;height:6px;accent-color:var(--curve);min-width:40px}
+@media (max-width:760px){
+  .two,.cases,.steps{grid-template-columns:1fr}
+  h1{font-size:2.3em}
+  nav .hint{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
+</head>
+<body>
+<main class="deck" id="deck">
+
+<section class="slide" data-note="Annoncer l'objectif : comprendre d'où vient la définition du nombre dérivé, ce que signifie « dérivable en a », et savoir s'en servir. Tout le diaporama repose sur une seule image : zoomer sur un point de la courbe.">
+  <div class="center">
+    <p class="eyebrow">Première · Dérivation</p>
+    <h1>Le nombre dérivé</h1>
+    <p class="lead">Du zoom sur une courbe à la limite du taux de variation.</p>
+    <p class="src">D'après la vidéo d'un collègue : <a href="https://youtu.be/cv0djQqfwBg">youtu.be/cv0djQqfwBg</a>. Texte et figures refaits pour ce diaporama.</p>
+  </div>
+</section>
+
+<section class="slide" data-note="On procède en deux temps. D'abord l'intuition graphique, sans aucun calcul. Ensuite seulement, on traduit ce qu'on a vu en une définition mathématique.">
+  <p class="eyebrow">Plan</p>
+  <h2>Une idée, deux temps</h2>
+  <div class="center">
+    <p class="lead">Que veut dire « la fonction \(f\) est dérivable en \(a\) » ?</p>
+    <ol class="steps" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+      <li><h3>Voir</h3><p>On zoome sur un point de la courbe et on observe ce qu'elle devient.</p></li>
+      <li><h3>Calculer</h3><p>On remplace le zoom par un calcul : un coefficient directeur, puis une limite.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="slide" data-note="Courbe de la fonction carré, point d'abscisse 0,5. Zoomer lentement et laisser les élèves dire ce qu'ils voient : la courbe se redresse jusqu'à ressembler à une droite. Faire lire la pente sur le quadrillage : un carreau à droite, un carreau vers le haut.">
+  <p class="eyebrow">Partie 1 · Voir</p>
+  <h2>Zoomons sur la parabole</h2>
+  <div class="two">
+    <div class="col">
+      <p>On trace la <span class="c">courbe de \(f(x)=x^2\)</span> et on place le point A d'abscisse \(0{,}5\).</p>
+      <ul>
+        <li>Plus on zoome sur A, plus la courbe ressemble à une <span class="d">droite</span>.</li>
+        <li>Sur le quadrillage, cette droite monte d'un carreau quand on avance d'un carreau.</li>
+      </ul>
+      <p class="box">Son coefficient directeur vaut <b>1</b>.</p>
+    </div>
+    <div class="fig" data-fig="zoom" data-fn="sq" data-a="0.5" data-m="1" id="z1"></div>
+  </div>
+</section>
+
+<section class="slide" data-note="C'est la définition intuitive. Insister sur les trois gestes : choisir le point, zoomer, lire la pente de la droite qui apparaît. La notation f′(a) se lit « f prime de a ».">
+  <p class="eyebrow">Partie 1 · Voir</p>
+  <h2>Une première définition</h2>
+  <div class="center">
+    <p class="box def lead">Le <b>nombre dérivé</b> de \(f\) en \(a\), noté \(f'(a)\), est le coefficient directeur de la droite avec laquelle la courbe se confond quand on zoome sur son point d'abscisse \(a\).</p>
+    <ol class="steps">
+      <li><p>Placer le point de la courbe d'abscisse \(a\).</p></li>
+      <li><p>Zoomer sur ce point jusqu'à voir une droite.</p></li>
+      <li><p>Lire le coefficient directeur de cette droite.</p></li>
+    </ol>
+    <p>Pour la fonction carré, on vient de lire \(f'(0{,}5)=1\).</p>
+  </div>
+</section>
+
+<section class="slide" data-note="Laisser chercher. Même méthode, mais on zoome cette fois sur le point d'abscisse 1. La droite monte de deux carreaux pour un carreau vers la droite : f′(1) = 2.">
+  <p class="eyebrow">Partie 1 · À vous</p>
+  <h2>Que vaut \(f'(1)\) ?</h2>
+  <div class="two">
+    <div class="col">
+      <p>Toujours avec \(f(x)=x^2\). Comment trouver \(f'(1)\) sur le graphique ?</p>
+      <p><button type="button" class="reveal" data-target="r1">Afficher la réponse</button></p>
+      <div class="answer col" id="r1">
+        <p>On zoome sur le point d'abscisse \(1\). La droite qui apparaît monte de 2 quand on avance de 1.</p>
+        <p class="box">\(f'(1)=2\)</p>
+      </div>
+    </div>
+    <div class="fig" data-fig="zoom" data-fn="sq" data-a="1" data-m="2" id="z2"></div>
+  </div>
+</section>
+
+<section class="slide" data-note="Changement de fonction : valeur absolue de x² − 1, au point d'abscisse 1. On peut zoomer autant qu'on veut, on voit toujours deux demi-droites qui forment un angle, jamais une seule droite. La fonction n'est pas dérivable en 1. Faire remarquer les deux pentes différentes, −2 à gauche et 2 à droite.">
+  <p class="eyebrow">Partie 1 · Voir</p>
+  <h2>Premier obstacle : un angle</h2>
+  <div class="two">
+    <div class="col">
+      <p>On prend \(f(x)=\lvert x^2-1\rvert\) et on zoome sur le point d'abscisse \(1\).</p>
+      <ul>
+        <li>La courbe ne devient jamais une droite : on voit deux demi-droites qui forment un angle.</li>
+        <li>À gauche la pente s'approche de \(-2\), à droite de \(2\).</li>
+      </ul>
+      <p class="box">Pas de droite unique : \(f\) <b>n'est pas dérivable en 1</b>.</p>
+    </div>
+    <div class="fig" data-fig="zoom" data-fn="abs" data-a="1" id="z3"></div>
+  </div>
+</section>
+
+<section class="slide" data-note="Fonction racine carrée, à l'origine. Cette fois la courbe se confond bien avec une droite, mais cette droite est verticale. Rappeler qu'une droite verticale n'a pas de coefficient directeur. Donc pas de nombre dérivé en 0.">
+  <p class="eyebrow">Partie 1 · Voir</p>
+  <h2>Second obstacle : une droite verticale</h2>
+  <div class="two">
+    <div class="col">
+      <p>On prend \(f(x)=\sqrt{x}\) et on zoome sur l'origine.</p>
+      <ul>
+        <li>La courbe se confond bien avec une droite…</li>
+        <li>…mais cette droite est <b>verticale</b> : elle n'a pas de coefficient directeur.</li>
+      </ul>
+      <p class="box">Pas de coefficient directeur : \(f\) <b>n'est pas dérivable en 0</b>.</p>
+    </div>
+    <div class="fig" data-fig="zoom" data-fn="sqrt" data-a="0" id="z4"></div>
+  </div>
+</section>
+
+<section class="slide" data-note="Récapituler : on zoome sur le point d'abscisse a et trois situations sont possibles. Une seule donne un nombre dérivé. Le point essentiel à retenir : le nombre dérivé est le coefficient directeur de la droite.">
+  <p class="eyebrow">Partie 1 · Bilan</p>
+  <h2>En zoomant, trois situations</h2>
+  <div class="center">
+    <div class="cases">
+      <div class="case">
+        <svg viewBox="0 0 120 70" role="img" aria-label="Deux demi-droites formant un angle"><path d="M15 12 L60 58 L105 12"/></svg>
+        <h3>Pas de droite</h3>
+        <p>La courbe ne se confond avec aucune droite. Exemple : \(\lvert x^2-1\rvert\) en 1.</p>
+        <span class="pill no">Non dérivable</span>
+      </div>
+      <div class="case">
+        <svg viewBox="0 0 120 70" role="img" aria-label="Une droite verticale"><path d="M60 6 L60 64"/></svg>
+        <h3>Une droite verticale</h3>
+        <p>Elle n'a pas de coefficient directeur. Exemple : \(\sqrt{x}\) en 0.</p>
+        <span class="pill no">Non dérivable</span>
+      </div>
+      <div class="case">
+        <svg viewBox="0 0 120 70" role="img" aria-label="Une droite oblique"><path d="M12 58 L108 12"/></svg>
+        <h3>Une droite non verticale</h3>
+        <p>Son coefficient directeur est \(f'(a)\). Exemple : \(x^2\) en 1.</p>
+        <span class="pill ok">Dérivable</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-note="On veut retrouver f′(1) = 2 sans zoomer. Idée : placer un second point B sur la courbe et tracer la droite (AB). On rapproche B de A autant qu'on veut, sans jamais les confondre, sinon la droite n'existe plus. Faire lire la pente de (AB) qui s'approche de 2. Cocher la vue rapprochée pour montrer que la courbe et la droite finissent par se superposer.">
+  <p class="eyebrow">Partie 2 · Calculer</p>
+  <h2>Sans zoomer : un second point</h2>
+  <div class="two">
+    <div class="col">
+      <p>On place un second point B sur la <span class="c">courbe</span> et on trace la <span class="d">droite (AB)</span>.</p>
+      <ul>
+        <li>On rapproche B de A, aussi près qu'on veut.</li>
+        <li>B ne peut pas atteindre A : avec un seul point, il n'y a plus de droite.</li>
+        <li>Le coefficient directeur de (AB) s'approche de celui lu en zoomant.</li>
+      </ul>
+    </div>
+    <div class="fig" data-fig="sec" id="s1"></div>
+  </div>
+</section>
+
+<section class="slide" data-note="B n'est pas en A, donc son abscisse s'écrit a + h avec h non nul. h positif : B est à droite de A. h négatif : B est à gauche. Appliquer la formule du coefficient directeur ; les a s'éliminent au dénominateur. Ce quotient s'appelle le taux de variation, ou taux d'accroissement, de f entre a et a + h.">
+  <p class="eyebrow">Partie 2 · Calculer</p>
+  <h2>Le coefficient directeur de (AB)</h2>
+  <div class="two">
+    <div class="col">
+      <p>L'abscisse de B s'écrit \(a+h\), avec \(h\neq 0\). Les deux points sont sur la courbe :</p>
+      <p class="math">\(A\,(a\,;f(a))\) et \(B\,(a+h\,;f(a+h))\)</p>
+      <div class="math">\[\frac{y_B-y_A}{x_B-x_A}=\frac{f(a+h)-f(a)}{(a+h)-a}=\frac{f(a+h)-f(a)}{h}\]</div>
+      <p class="box">Ce quotient est le <b>taux de variation</b> de \(f\) entre \(a\) et \(a+h\) (on dit aussi taux d'accroissement).</p>
+    </div>
+    <div class="fig"><canvas id="diag" role="img" aria-label="Schéma : points A et B sur la courbe, d'abscisses a et a + h, et droite (AB)"></canvas></div>
+  </div>
+</section>
+
+<section class="slide" data-note="Rapprocher B de A, c'est faire tendre h vers 0. On cherche donc la limite du taux de variation. Préciser la condition préalable : a doit appartenir à l'ensemble de définition. Si f est définie sur ]3 ; +∞[, se demander si elle est dérivable en 3 n'a pas de sens.">
+  <p class="eyebrow">Partie 2 · Calculer</p>
+  <h2>La définition</h2>
+  <div class="center">
+    <p>Rapprocher B de A revient à faire tendre \(h\) vers 0.</p>
+    <div class="box def">
+      <p>Soit \(f\) une fonction et \(a\) un nombre de son ensemble de définition. On dit que \(f\) est <b>dérivable en \(a\)</b> si le taux de variation a une limite finie quand \(h\) tend vers 0. Cette limite est le nombre dérivé de \(f\) en \(a\) :</p>
+      <div class="math">\[f'(a)=\lim_{h\to 0}\frac{f(a+h)-f(a)}{h}\]</div>
+    </div>
+    <p class="muted">Si \(a\) n'est pas dans l'ensemble de définition, la question ne se pose pas : pour \(f\) définie sur \(]3\,;+\infty[\), chercher \(f'(3)\) n'a pas de sens.</p>
+  </div>
+</section>
+
+<section class="slide" data-note="Les trois issues du calcul de limite correspondent exactement aux trois situations vues en zoomant. Limite finie : droite non verticale. Limite infinie : droite verticale. Pas de limite : pas de droite.">
+  <p class="eyebrow">Partie 2 · Calculer</p>
+  <h2>Trois issues pour la limite</h2>
+  <div class="center">
+    <div class="tablewrap">
+    <table>
+      <tr><th>Limite du taux de variation quand \(h\to 0\)</th><th>Ce qu'on voyait en zoomant</th><th>Conclusion</th><th>Exemple</th></tr>
+      <tr><td>Un nombre fini \(\ell\)</td><td>Une droite non verticale</td><td><span class="pill ok">Dérivable</span> et \(f'(a)=\ell\)</td><td>\(x^2\) en 1</td></tr>
+      <tr><td>\(+\infty\) ou \(-\infty\)</td><td>Une droite verticale</td><td><span class="pill no">Non dérivable</span></td><td>\(\sqrt{x}\) en 0</td></tr>
+      <tr><td>Pas de limite</td><td>Pas de droite</td><td><span class="pill no">Non dérivable</span></td><td>\(\lvert x^2-1\rvert\) en 1</td></tr>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-note="On applique la définition à la fonction carré en 1. Première étape : écrire le taux de variation en remplaçant a par 1. Deuxième étape : développer, simplifier par h. Troisième étape : faire tendre h vers 0. On retrouve 2, la valeur lue en zoomant. Laisser ensuite les élèves refaire le calcul en 0,5.">
+  <p class="eyebrow">Partie 2 · Calculer</p>
+  <h2>Retrouver \(f'(1)=2\) par le calcul</h2>
+  <div class="two" style="align-items:start">
+    <div class="col">
+      <p>Avec \(f(x)=x^2\) et \(a=1\) :</p>
+      <div class="math">\[\begin{aligned}\frac{f(1+h)-f(1)}{h}&=\frac{(1+h)^2-1^2}{h}\\[.3em]&=\frac{1+2h+h^2-1}{h}\\[.3em]&=\frac{2h+h^2}{h}=2+h\end{aligned}\]</div>
+      <p>Quand \(h\) tend vers 0, \(2+h\) tend vers 2.</p>
+      <p class="box">La limite est finie : \(f\) est dérivable en 1 et \(f'(1)=2\).</p>
+    </div>
+    <div class="col">
+      <h3>À vous : retrouver \(f'(0{,}5)=1\)</h3>
+      <p><button type="button" class="reveal" data-target="r2">Afficher le calcul</button></p>
+      <div class="answer col" id="r2">
+        <div class="math">\[\begin{aligned}\frac{(0{,}5+h)^2-0{,}5^2}{h}&=\frac{0{,}25+h+h^2-0{,}25}{h}\\[.3em]&=\frac{h+h^2}{h}=1+h\end{aligned}\]</div>
+        <p>\(1+h\) tend vers 1 quand \(h\) tend vers 0, donc \(f'(0{,}5)=1\).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-note="Complément qui ne figure pas dans la vidéo : vérifier par le calcul les deux cas de non-dérivabilité. Pour la racine, le taux vaut 1/√h, qui devient aussi grand qu'on veut. Pour la valeur absolue, le taux s'approche de 2 à droite et de −2 à gauche : il n'a pas de limite.">
+  <p class="eyebrow">Pour aller plus loin</p>
+  <h2>Les deux obstacles, par le calcul</h2>
+  <div class="two" style="align-items:start">
+    <div class="col">
+      <h3>\(f(x)=\sqrt{x}\) en 0</h3>
+      <p>Pour \(h>0\) :</p>
+      <div class="math">\[\frac{\sqrt{0+h}-\sqrt{0}}{h}=\frac{\sqrt{h}}{h}=\frac{1}{\sqrt{h}}\]</div>
+      <p>Quand \(h\) tend vers 0, ce quotient tend vers \(+\infty\).</p>
+      <p class="box">Limite infinie : non dérivable en 0.</p>
+    </div>
+    <div class="col">
+      <h3>\(f(x)=\lvert x^2-1\rvert\) en 1</h3>
+      <p>Pour \(h\) proche de 0 :</p>
+      <div class="math">\[\frac{\lvert(1+h)^2-1\rvert-0}{h}=\frac{\lvert h\rvert\,(2+h)}{h}\]</div>
+      <p>Ce quotient vaut \(2+h\) si \(h>0\) et \(-(2+h)\) si \(h<0\) : il s'approche de 2 d'un côté, de \(-2\) de l'autre.</p>
+      <p class="box">Pas de limite : non dérivable en 1.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-note="Conclure sur le lien entre les deux points de vue. Quand on calcule un taux de variation dans un exercice, on calcule le coefficient directeur d'une droite (AB). Quand on fait tendre h vers 0, on rapproche B de A. Il faut comprendre le calcul et le graphique.">
+  <p class="eyebrow">Bilan</p>
+  <h2>À retenir</h2>
+  <div class="center">
+    <ol class="steps">
+      <li><h3>Sur le graphique</h3><p>\(f'(a)\) est le coefficient directeur de la droite qui apparaît quand on zoome sur le point d'abscisse \(a\).</p></li>
+      <li><h3>Dans le calcul</h3><p>\(\dfrac{f(a+h)-f(a)}{h}\) est le coefficient directeur de la droite (AB). Faire tendre \(h\) vers 0, c'est rapprocher B de A.</p></li>
+      <li><h3>Dérivable ou non</h3><p>Limite finie : dérivable, et \(f'(a)\) est cette limite. Limite infinie ou pas de limite : non dérivable.</p></li>
+    </ol>
+  </div>
+</section>
+
+</main>
+
+<aside id="notes" hidden aria-live="polite"></aside>
+<nav aria-label="Navigation du diaporama">
+  <button type="button" id="prev" aria-label="Diapositive précédente">←</button>
+  <span class="count" id="count"></span>
+  <button type="button" id="next" aria-label="Diapositive suivante">→</button>
+  <progress id="prog" value="1" max="15" aria-label="Avancement"></progress>
+  <span class="hint muted">Flèches du clavier pour naviguer</span>
+  <button type="button" id="notesBtn" aria-pressed="false">Notes (N)</button>
+</nav>
+
+<script>
+(function(){
+"use strict";
+var css=function(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();};
+var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fr(x,d){ if(!isFinite(x)) return '—'; var s=x.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}); return s.replace('-','−'); }
+function frAuto(x){ var s=Number(x.toPrecision(2)).toLocaleString('fr-FR',{maximumFractionDigits:6}); return s.replace('-','−'); }
+
+var FN={
+  sq:{f:function(x){return x*x;}},
+  abs:{f:function(x){return Math.abs(x*x-1);}},
+  sqrt:{f:function(x){return x<0?NaN:Math.sqrt(x);},x0:0}
+};
+
+/* ---------- repère orthonormé sur canvas ---------- */
+function Plot(canvas){
+  var P={canvas:canvas,cx:0,cy:0,w:1,W:0,H:0,s:1,ctx:null};
+  P.resize=function(){
+    var r=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+    if(r.width<2) return false;
+    P.W=r.width;P.H=r.height;
+    canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);
+    P.ctx=canvas.getContext('2d');P.ctx.setTransform(dpr,0,0,dpr,0,0);
+    return true;
+  };
+  P.setView=function(cx,cy,w){P.cx=cx;P.cy=cy;P.w=w;P.s=P.W/(2*w);};
+  P.X=function(x){return P.W/2+(x-P.cx)*P.s;};
+  P.Y=function(y){return P.H/2-(y-P.cy)*P.s;};
+  P.clear=function(){P.ctx.clearRect(0,0,P.W,P.H);};
+  P.seg=function(x1,y1,x2,y2,col,lw,dash){
+    var c=P.ctx;c.save();c.strokeStyle=col;c.lineWidth=lw||1;if(dash)c.setLineDash(dash);
+    c.beginPath();c.moveTo(P.X(x1),P.Y(y1));c.lineTo(P.X(x2),P.Y(y2));c.stroke();c.restore();
+  };
+  P.grid=function(){
+    var c=P.ctx,hh=P.H/(2*P.s),raw=2*P.w/8,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p;
+    var step=(m<1.5?1:m<3.5?2:m<7.5?5:10)*p;
+    var d=Math.max(0,-Math.floor(Math.log10(step)+1e-9));
+    var xmin=P.cx-P.w,xmax=P.cx+P.w,ymin=P.cy-hh,ymax=P.cy+hh,k,v;
+    c.save();c.font='12px '+css('--body');c.fillStyle=css('--muted');
+    for(k=Math.ceil(xmin/step);k<=Math.floor(xmax/step);k++){
+      v=k*step;P.seg(v,ymin,v,ymax,k===0?css('--muted'):css('--grid'),k===0?1.5:1);
+      c.textAlign='center';c.textBaseline='bottom';
+      if(P.X(v)>24&&P.X(v)<P.W-24) c.fillText(fr(v,d),P.X(v),P.H-3);
+    }
+    for(k=Math.ceil(ymin/step);k<=Math.floor(ymax/step);k++){
+      v=k*step;P.seg(xmin,v,xmax,v,k===0?css('--muted'):css('--grid'),k===0?1.5:1);
+      c.textAlign='left';c.textBaseline='middle';
+      if(P.Y(v)>12&&P.Y(v)<P.H-22) c.fillText(fr(v,d),4,P.Y(v));
+    }
+    c.restore();
+  };
+  P.curve=function(f,x0){
+    var c=P.ctx,px,x,y,pen=false;
+    c.save();c.strokeStyle=css('--curve');c.lineWidth=3;c.lineJoin='round';c.beginPath();
+    if(x0!==undefined&&P.X(x0)>=0&&P.X(x0)<=P.W){c.moveTo(P.X(x0),P.Y(f(x0)));pen=true;}
+    for(px=0;px<=P.W;px+=0.5){
+      x=P.cx+(px-P.W/2)/P.s;
+      if(x0!==undefined&&x<=x0) continue;
+      y=f(x);
+      if(!isFinite(y)){pen=false;continue;}
+      var Y=Math.max(-50,Math.min(P.H+50,P.Y(y)));
+      if(pen) c.lineTo(px,Y); else {c.moveTo(px,Y);pen=true;}
+    }
+    c.stroke();c.restore();
+  };
+  P.slopeLine=function(x0,y0,m,col,lw,dash){
+    P.seg(P.cx-P.w,y0+m*(P.cx-P.w-x0),P.cx+P.w,y0+m*(P.cx+P.w-x0),col,lw,dash);
+  };
+  P.dot=function(x,y,col,label,dx,dy){
+    var c=P.ctx;c.save();c.fillStyle=col;c.strokeStyle=css('--surface');c.lineWidth=2;
+    c.beginPath();c.arc(P.X(x),P.Y(y),6,0,6.2832);c.fill();c.stroke();
+    if(label){c.font='bold 16px '+css('--body');c.fillStyle=css('--ink');c.textAlign='center';c.textBaseline='middle';
+      c.fillText(label,P.X(x)+(dx||-14),P.Y(y)+(dy||-14));}
+    c.restore();
+  };
+  P.text=function(t,px,py,col,align,italic){
+    var c=P.ctx;c.save();c.font=(italic?'italic ':'')+'15px '+css('--body');c.fillStyle=col;c.textAlign=align||'center';c.textBaseline='middle';
+    c.fillText(t,px,py);c.restore();
+  };
+  return P;
+}
+
+var figures=[];
+function el(tag,attrs,html){var e=document.createElement(tag),k;for(k in attrs)e.setAttribute(k,attrs[k]);if(html!==undefined)e.innerHTML=html;return e;}
+
+/* ---------- figure « zoom » ---------- */
+function zoomFig(host){
+  var id=host.id,fn=FN[host.dataset.fn],f=fn.f,a=parseFloat(host.dataset.a);
+  var m=host.dataset.m!==undefined?parseFloat(host.dataset.m):null;
+  var canvas=el('canvas',{role:'img','aria-label':'Courbe et point A, vue que le curseur permet d’agrandir'});
+  var ctl=el('div',{'class':'ctl'});
+  ctl.appendChild(el('label',{'for':id+'-t'},'Zoom <input type="range" id="'+id+'-t" min="0" max="100" value="0">'));
+  var go=el('button',{type:'button',id:id+'-go'},'Zoomer');
+  var back=el('button',{type:'button',id:id+'-back'},'Vue d’ensemble');
+  ctl.appendChild(go);ctl.appendChild(back);
+  if(m!==null) ctl.appendChild(el('label',{'for':id+'-l'},'<input type="checkbox" id="'+id+'-l"> Superposer la droite de pente '+fr(m,0)));
+  var read=el('dl',{'class':'read'});
+  host.appendChild(canvas);host.appendChild(ctl);host.appendChild(read);
+  var P=Plot(canvas),slider=ctl.querySelector('input[type=range]'),chk=ctl.querySelector('input[type=checkbox]');
+  var t=0,raf=0;
+  function draw(){
+    if(!P.resize()) return;
+    var w=3*Math.pow(10,-3.5*t/100),fa=f(a),hh;
+    P.setView(a,fa,w);P.clear();hh=P.H/(2*P.s);
+    if(fn.x0!==undefined&&P.X(fn.x0)>0){
+      P.ctx.save();P.ctx.fillStyle=css('--grid');P.ctx.globalAlpha=.55;P.ctx.fillRect(0,0,P.X(fn.x0),P.H);P.ctx.restore();
+    }
+    P.grid();
+    if(fn.x0!==undefined&&P.X(fn.x0)>90) P.text('hors du domaine',P.X(fn.x0)/2,26,css('--muted'));
+    P.curve(f,fn.x0);
+    if(chk&&chk.checked) P.slopeLine(a,fa,m,css('--droite'),2,[8,6]);
+    P.dot(a,fa,css('--ink'),'A');
+    var right=(f(a+w)-fa)/w,left=(fa-f(a-w))/w;
+    read.innerHTML='<dt>Demi-largeur de la fenêtre</dt><dd>'+frAuto(w)+'</dd>'+
+      '<dt>Pente mesurée de A au bord droit</dt><dd>'+fr(right,3)+'</dd>'+
+      '<dt>Pente mesurée du bord gauche à A</dt><dd>'+(isFinite(left)?fr(left,3):'hors du domaine')+'</dd>';
+  }
+  function stop(){if(raf){cancelAnimationFrame(raf);raf=0;}}
+  slider.addEventListener('input',function(){stop();t=+slider.value;draw();});
+  if(chk) chk.addEventListener('change',draw);
+  back.addEventListener('click',function(){stop();t=0;slider.value=0;draw();});
+  go.addEventListener('click',function(){
+    stop();
+    if(reduce){t=100;slider.value=100;draw();return;}
+    if(t>=99)t=0;
+    var t0=t,start=null,dur=6000*(100-t0)/100;
+    function step(ts){
+      if(start===null)start=ts;
+      var u=Math.min(1,(ts-start)/dur);t=t0+(100-t0)*u;slider.value=Math.round(t);draw();
+      raf=u<1?requestAnimationFrame(step):0;
+    }
+    raf=requestAnimationFrame(step);
+  });
+  figures.push(draw);
+}
+
+/* ---------- figure « sécante » ---------- */
+function secFig(host){
+  var id=host.id,f=FN.sq.f,a=1,h=0.8,raf=0;
+  var canvas=el('canvas',{role:'img','aria-label':'Parabole, points A et B, droite (AB) dont la pente dépend de h'});
+  var ctl=el('div',{'class':'ctl'});
+  ctl.appendChild(el('label',{'for':id+'-a'},'Point A d’abscisse <select id="'+id+'-a"><option value="1">1</option><option value="0.5">0,5</option></select>'));
+  ctl.appendChild(el('label',{'for':id+'-h'},'h <input type="range" id="'+id+'-h" min="-100" max="100" value="80">'));
+  var go=el('button',{type:'button',id:id+'-go'},'Rapprocher B de A');
+  ctl.appendChild(go);
+  ctl.appendChild(el('label',{'for':id+'-z'},'<input type="checkbox" id="'+id+'-z"> Vue rapprochée'));
+  var read=el('dl',{'class':'read'});
+  host.appendChild(canvas);host.appendChild(ctl);host.appendChild(read);
+  var P=Plot(canvas),sel=ctl.querySelector('select'),slider=ctl.querySelector('input[type=range]'),chk=ctl.querySelector('input[type=checkbox]');
+  function draw(){
+    if(!P.resize()) return;
+    var fa=f(a),b=a+h,fb=f(b);
+    if(chk.checked) P.setView(a,fa,0.4); else P.setView(0.9,1.95,3);
+    P.clear();P.grid();P.curve(f);
+    if(h!==0){
+      var m=(fb-fa)/h;
+      P.slopeLine(a,fa,m,css('--droite'),2.5);
+      P.seg(a,fa,b,fa,css('--muted'),1.5,[5,5]);P.seg(b,fa,b,fb,css('--muted'),1.5,[5,5]);
+      if(Math.abs(h)*P.s>70){
+        P.text('h',P.X(a+h/2),P.Y(fa)+14,css('--muted'),'center',true);
+        P.text('f(a + h) − f(a)',P.X(b)+(h>0?8:-8),P.Y((fa+fb)/2),css('--muted'),h>0?'left':'right',true);
+      }
+      P.dot(b,fb,css('--droite'),'B',h>0?-14:14,-14);
+      read.innerHTML='<dt>h</dt><dd>'+fr(h,3)+'</dd><dt>Point B</dt><dd>('+fr(b,3)+' ; '+fr(fb,3)+')</dd>'+
+        '<dt>Coefficient directeur de (AB)</dt><dd>'+fr(m,3)+'</dd>';
+    } else {
+      read.innerHTML='<dt>h</dt><dd>0</dd><dt>Point B</dt><dd>confondu avec A</dd><dt>Coefficient directeur de (AB)</dt><dd>non défini</dd>';
+    }
+    P.dot(a,fa,css('--ink'),'A',h>0?-14:14,-14);
+  }
+  function stop(){if(raf){cancelAnimationFrame(raf);raf=0;}}
+  sel.addEventListener('change',function(){stop();a=parseFloat(sel.value);draw();});
+  slider.addEventListener('input',function(){stop();h=+slider.value/100;draw();});
+  chk.addEventListener('change',draw);
+  go.addEventListener('click',function(){
+    stop();
+    var sign=h<0?-1:1,h0=Math.abs(h);
+    if(h0<0.002){h0=1;}
+    if(reduce){h=sign*0.001;slider.value=0;draw();return;}
+    var start=null,dur=6000;
+    function step(ts){
+      if(start===null)start=ts;
+      var u=Math.min(1,(ts-start)/dur);
+      h=sign*h0*Math.pow(0.001/h0,u);slider.value=Math.round(h*100);draw();
+      raf=u<1?requestAnimationFrame(step):0;
+    }
+    raf=requestAnimationFrame(step);
+  });
+  figures.push(draw);
+}
+
+/* ---------- schéma annoté A, B, a, a + h ---------- */
+function diagram(canvas){
+  var P=Plot(canvas),g=function(x){return 0.35*x*x+0.6;},a=0.8,h=1.3;
+  function draw(){
+    if(!P.resize()) return;
+    P.setView(1.25,1.3,2.0);P.clear();
+    var hh=P.H/(2*P.s),ink=css('--ink'),mu=css('--muted'),b=a+h,ga=g(a),gb=g(b),c=P.ctx;
+    P.seg(P.cx-P.w,0,P.cx+P.w,0,ink,1.5);P.seg(0,P.cy-hh,0,P.cy+hh,ink,1.5);
+    P.curve(g);
+    P.slopeLine(a,ga,(gb-ga)/h,css('--droite'),2.5);
+    P.seg(a,0,a,ga,mu,1.2,[5,5]);P.seg(b,0,b,gb,mu,1.2,[5,5]);
+    P.seg(0,ga,a,ga,mu,1.2,[5,5]);P.seg(0,gb,b,gb,mu,1.2,[5,5]);
+    P.seg(a,ga,b,ga,mu,1.2,[2,4]);
+    P.text('a',P.X(a),P.Y(0)+16,ink,'center',true);
+    P.text('a + h',P.X(b),P.Y(0)+16,ink,'center',true);
+    P.text('f(a)',P.X(0)-8,P.Y(ga),ink,'right',true);
+    P.text('f(a + h)',P.X(0)-8,P.Y(gb),ink,'right',true);
+    P.text('h',P.X(a+h/2),P.Y(ga)+14,mu,'center',true);
+    P.text('f(a + h) − f(a)',P.X(b)+8,P.Y((ga+gb)/2),mu,'left',true);
+    P.dot(a,ga,ink,'A',-12,-16);P.dot(b,gb,css('--droite'),'B',-12,-16);
+    void c;
+  }
+  figures.push(draw);
+}
+
+document.querySelectorAll('[data-fig="zoom"]').forEach(zoomFig);
+document.querySelectorAll('[data-fig="sec"]').forEach(secFig);
+diagram(document.getElementById('diag'));
+function redraw(){figures.forEach(function(d){d();});}
+
+/* ---------- navigation ---------- */
+var slides=[].slice.call(document.querySelectorAll('.slide')),cur=0;
+var count=document.getElementById('count'),prog=document.getElementById('prog'),notes=document.getElementById('notes'),notesBtn=document.getElementById('notesBtn');
+prog.max=slides.length;
+function show(i,fromHash){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach(function(s,k){s.classList.toggle('on',k===cur);s.setAttribute('aria-hidden',k===cur?'false':'true');});
+  count.textContent=(cur+1)+' / '+slides.length;prog.value=cur+1;
+  notes.innerHTML='<b>À dire.</b> '+(slides[cur].dataset.note||'');
+  if(!fromHash){try{history.replaceState(null,'','#diapo-'+(cur+1));}catch(e){}}
+}
+function fromHash(){var m=/^#diapo-(\d+)$/.exec(location.hash);show(m?parseInt(m[1],10)-1:0,true);}
+document.getElementById('prev').addEventListener('click',function(){show(cur-1);});
+document.getElementById('next').addEventListener('click',function(){show(cur+1);});
+notesBtn.addEventListener('click',toggleNotes);
+function toggleNotes(){notes.hidden=!notes.hidden;notesBtn.setAttribute('aria-pressed',String(!notes.hidden));redraw();}
+document.addEventListener('keydown',function(e){
+  var tag=e.target.tagName;
+  if(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'){show(cur+1);e.preventDefault();}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){show(cur-1);e.preventDefault();}
+  else if(e.key==='n'||e.key==='N'){toggleNotes();}
+});
+document.querySelectorAll('.reveal').forEach(function(b){
+  b.addEventListener('click',function(){
+    var t=document.getElementById(b.dataset.target),on=t.classList.toggle('shown');
+    b.textContent=on?'Masquer':(b.dataset.label||(b.dataset.label=b.textContent));
+  });
+  b.dataset.label=b.textContent;
+});
+window.addEventListener('hashchange',fromHash);
+window.addEventListener('resize',redraw);
+if(window.matchMedia){var mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',redraw);}
+new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(redraw);
+fromHash();redraw();
+})();
+</script>
+</body>
+</html>
