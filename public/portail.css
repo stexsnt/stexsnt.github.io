@@ -1,0 +1,213 @@
+/* Portail des quatre sites. La page d'accueil est neutre ; chaque bande reprend
+   les couleurs et les polices du site qu'elle présente. */
+
+@font-face { font-family: "Atkinson Hyperlegible"; font-weight: 400; font-style: normal; font-display: swap; src: url(polices/atkinson-hyperlegible-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible"; font-weight: 400; font-style: italic; font-display: swap; src: url(polices/atkinson-hyperlegible-latin-400-italic.woff2) format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible"; font-weight: 700; font-style: normal; font-display: swap; src: url(polices/atkinson-hyperlegible-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Bricolage Grotesque"; font-weight: 800; font-display: swap; src: url(polices/bricolage-grotesque-latin-800-normal.woff2) format("woff2"); }
+@font-face { font-family: "Sora"; font-weight: 700; font-display: swap; src: url(polices/sora-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "CMU Serif"; font-weight: 400; font-style: normal; font-display: swap; src: url(polices/cmu-serif-500-roman.woff2) format("woff2"); }
+@font-face { font-family: "CMU Serif"; font-weight: 400; font-style: italic; font-display: swap; src: url(polices/cmu-serif-500-italic.woff2) format("woff2"); }
+@font-face { font-family: "CMU Serif"; font-weight: 700; font-style: normal; font-display: swap; src: url(polices/cmu-serif-700-roman.woff2) format("woff2"); }
+@font-face { font-family: "CMU Sans Serif"; font-weight: 400; font-display: swap; src: url(polices/cmu-sans-serif-500-roman.woff2) format("woff2"); }
+@font-face { font-family: "Zilla Slab"; font-weight: 700; font-display: swap; src: url(polices/zilla-slab-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-weight: 400; font-display: swap; src: url(polices/ibm-plex-sans-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-weight: 700; font-display: swap; src: url(polices/ibm-plex-sans-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 700; font-display: swap; src: url(polices/ibm-plex-mono-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 400; font-display: swap; src: url(polices/jetbrains-mono-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 700; font-display: swap; src: url(polices/jetbrains-mono-latin-700-normal.woff2) format("woff2"); }
+
+:root {
+  --page: #F4F5F9; --encre: #14213D; --encre2: #4A5672; --trait: #D3D8E6;
+  --mue: #12805C; --synapse: #4338CA; --periple: #0B1026; --sesame: #8A5E00;
+  --atkinson: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --marge: clamp(1.25rem, 5vw, 4.5rem);
+  --large: 74rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --page: #0D1322; --encre: #EDF0F8; --encre2: #A9B3CC; --trait: #2A3350;
+    --mue: #3CCB96; --synapse: #A9A5FF; --periple: #F5F3FF; --sesame: #E5B95C; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--page); color: var(--encre); font: 400 1.0625rem/1.55 var(--atkinson); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; border-radius: 4px; }
+.evitement { position: absolute; left: -999rem; top: 0; background: var(--encre); color: var(--page); padding: .6rem 1rem; z-index: 5; }
+.evitement:focus { left: .5rem; top: .5rem; }
+
+/* ---------- Ouverture : quatre verbes, quatre polices ---------- */
+.ouverture { max-width: var(--large); margin: 0 auto; padding: clamp(2rem, 5vw, 3.75rem) var(--marge) clamp(2.5rem, 6vw, 4rem); }
+.amorce { margin: 0 0 clamp(1.25rem, 3vw, 2rem); font-size: clamp(1.1rem, 1rem + .6vw, 1.4rem); color: var(--encre2); max-width: 40rem; }
+.verbes { margin: 0; font-size: inherit; font-weight: inherit; display: grid; }
+.verbe { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); align-items: baseline; column-gap: clamp(1rem, 3vw, 2.5rem);
+  text-decoration: none; padding: .1em 0; border-top: 1px solid var(--trait); }
+.verbe:last-child { border-bottom: 1px solid var(--trait); }
+.mot { font-size: clamp(3rem, 1.2rem + 8vw, 7.1rem); line-height: 1.02; letter-spacing: -0.03em; transition: translate .25s ease; }
+.quoi { font-size: clamp(.95rem, .85rem + .45vw, 1.2rem); color: var(--encre2); max-width: 22rem; justify-self: end; text-align: right; padding-bottom: .6em; }
+.quoi b { color: var(--encre); }
+.verbe:hover .mot, .verbe:focus-visible .mot { translate: .12em 0; }
+.v-mue .mot { font-family: "Bricolage Grotesque", "Trebuchet MS", sans-serif; font-weight: 800; color: var(--mue); }
+.v-synapse .mot { font-family: "Sora", "Trebuchet MS", sans-serif; font-weight: 700; color: var(--synapse); letter-spacing: -0.045em; font-size: clamp(2.55rem, 1.1rem + 7.2vw, 6.4rem); }
+.v-periple .mot { font-family: "CMU Serif", Georgia, serif; font-weight: 400; font-style: italic; color: var(--periple); letter-spacing: -0.015em; }
+.v-sesame .mot { font-family: "Zilla Slab", Rockwell, serif; font-weight: 700; color: var(--sesame); }
+.promesses { list-style: none; margin: clamp(1.5rem, 4vw, 2.5rem) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem 2rem; color: var(--encre2); }
+.promesses li { padding-left: 1.1rem; position: relative; }
+.promesses li::before { content: ""; position: absolute; left: 0; top: .62em; width: .5rem; height: .5rem; border-radius: 50%; background: var(--mue); }
+.promesses li:nth-child(2)::before { background: var(--synapse); }
+.promesses li:nth-child(3)::before { background: var(--periple); }
+.promesses li:nth-child(4)::before { background: var(--sesame); }
+
+/* ---------- Bandes : structure commune ---------- */
+.site { background: var(--s-fond); color: var(--s-encre); font-family: var(--s-texte); scroll-margin-top: 0; }
+.site-int { max-width: var(--large); margin: 0 auto; padding: clamp(3rem, 8vw, 6.5rem) var(--marge);
+  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(2rem, 6vw, 5rem); align-items: center; }
+.site-int.inverse .site-texte { order: 2; }
+.enseigne { display: flex; align-items: center; gap: .5rem; margin: 0 0 1.4rem; font: var(--s-enseigne); letter-spacing: -0.02em; }
+.enseigne svg { width: 2rem; height: 2rem; flex: none; }
+.site h2 { margin: 0 0 1.1rem; font: var(--s-titre); letter-spacing: var(--s-serrage, -0.02em); text-wrap: balance; }
+.chapo { margin: 0 0 1.6rem; font-size: 1.12rem; line-height: 1.6; color: var(--s-encre2); max-width: 33rem; }
+.reperes { margin: 0 0 2rem; display: grid; gap: .35rem; max-width: 33rem; }
+.reperes div { display: grid; grid-template-columns: 6.2rem minmax(0, 1fr); gap: 1rem; padding: .45rem 0; border-top: 1px solid var(--s-trait); }
+.reperes dt { color: var(--s-encre2); font-family: var(--s-ui, inherit); }
+.reperes dd { margin: 0; font-weight: 700; font-family: var(--s-ui, inherit); }
+.actions { margin: 0; }
+.bouton { display: inline-block; padding: .85rem 1.5rem; border-radius: var(--s-rayon, 14px); background: var(--s-accent); color: var(--s-sur-accent);
+  font: 700 1.08rem var(--s-ui, var(--s-texte)); text-decoration: none; transition: translate .15s ease, box-shadow .15s ease; box-shadow: 0 4px 0 var(--s-ombre); }
+.bouton:hover { translate: 0 -2px; box-shadow: 0 6px 0 var(--s-ombre); }
+.bouton:active { translate: 0 3px; box-shadow: 0 1px 0 var(--s-ombre); }
+
+.demo { background: var(--s-carte); border: 1px solid var(--s-trait); border-radius: 20px; padding: clamp(1.1rem, 3vw, 1.75rem); display: grid; gap: 1rem; min-width: 0; }
+.demo-titre { margin: 0; font: 700 1rem var(--s-ui, var(--s-texte)); color: var(--s-encre2); }
+.legende { margin: 0; color: var(--s-encre2); font-size: .98rem; }
+.reglage { display: block; font: 700 1rem var(--s-ui, var(--s-texte)); }
+.reglage input { display: block; margin-top: .2rem; }
+.reglage output { color: var(--s-vif, var(--s-accent)); font-variant-numeric: tabular-nums; }
+.reglage code { font: 700 .95em "JetBrains Mono", ui-monospace, monospace; }
+input[type="range"] { width: 100%; margin: 0; accent-color: var(--s-vif, var(--s-accent)); height: 1.75rem; cursor: pointer; }
+
+/* ---------- Mue ---------- */
+.site-mue { --s-fond: #F3F6F1; --s-carte: #FFFFFF; --s-encre: #14213D; --s-encre2: #4A5672; --s-trait: #D5DDD3;
+  --s-accent: #12805C; --s-sur-accent: #FFFFFF; --s-ombre: #0B5A40;
+  --s-texte: var(--atkinson); --s-titre: 800 clamp(2.2rem, 1.3rem + 3.6vw, 3.9rem)/1.05 "Bricolage Grotesque", "Trebuchet MS", sans-serif;
+  --s-enseigne: 800 1.6rem "Bricolage Grotesque", "Trebuchet MS", sans-serif; }
+.editeur { margin: 0; background: #111A33; color: #E6ECFA; border-radius: 12px; padding: 1rem 1.1rem; font: 400 clamp(.85rem, .7rem + .6vw, 1.02rem)/1.7 "JetBrains Mono", ui-monospace, monospace; overflow-x: auto; }
+.editeur .num { color: #7F8DB3; display: inline-block; width: 1.6em; user-select: none; }
+.editeur i { font-style: normal; color: #7FE0B8; font-weight: 700; }
+.editeur em { font-style: normal; color: #FFD45E; }
+.editeur b { color: #FFD45E; background: rgba(245, 179, 1, .18); border-radius: 4px; padding: 0 .3em; }
+.console { margin: 0; min-height: 13.2em; border: 1px solid #D5DDD3; border-radius: 12px; padding: .8rem 1.1rem; color: #12805C;
+  font: 700 1.02rem/1.55 "JetBrains Mono", ui-monospace, monospace; letter-spacing: .12em; overflow: hidden; }
+
+/* ---------- Synapse ---------- */
+.site-synapse { --s-fond: #F5F4FB; --s-carte: #FFFFFF; --s-encre: #1E2140; --s-encre2: #565B80; --s-trait: #D8D7EA;
+  --s-accent: #4338CA; --s-sur-accent: #FFFFFF; --s-ombre: #2A2391;
+  --s-texte: var(--atkinson); --s-titre: 700 clamp(2rem, 1.2rem + 3.2vw, 3.5rem)/1.1 "Sora", "Trebuchet MS", sans-serif; --s-serrage: -0.035em;
+  --s-enseigne: 700 1.5rem "Sora", "Trebuchet MS", sans-serif; }
+.demo-synapse .demo-titre { color: #1E2140; font-size: 1.05rem; }
+.neurone-corps { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: 1rem 1.5rem; align-items: center; }
+.neurone-fig { width: 100%; height: auto; }
+.neurone-fig line { stroke: #B9BAD6; stroke-linecap: round; transition: stroke-width .15s ease; }
+.neurone-fig line[data-signe="plus"] { stroke: #4338CA; }
+.neurone-fig line[data-signe="moins"] { stroke: #F25F5C; }
+.neurone-fig .entree { fill: #FFFFFF; stroke: #1E2140; stroke-width: 2; }
+.neurone-fig .noyau { fill: #0E7C86; }
+.neurone-fig text { font: 700 15px var(--atkinson); text-anchor: middle; fill: #1E2140; }
+.neurone-fig .noyau-t { fill: #FFFFFF; font-size: 17px; }
+.reglages { display: grid; gap: .5rem; }
+.verite { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; text-align: center; }
+.verite th { font-weight: 400; color: #565B80; padding: .3rem; border-bottom: 1px solid #D8D7EA; }
+.verite td { padding: .4rem .3rem; border-bottom: 1px solid #ECEBF6; }
+.verite td b { display: inline-block; min-width: 1.9em; padding: .05em 0; border-radius: 999px; background: #ECEBF6; color: #565B80; }
+.verite tr.actif td b { background: #4338CA; color: #FFFFFF; }
+.verdict { margin: 0; min-height: 4.7em; color: #565B80; }
+.verdict[data-etat="reussi"] { color: #0A5D65; font-weight: 700; }
+
+/* ---------- Périple ---------- */
+.site-periple { --s-fond: #0B1026; --s-carte: #0B1026; --s-encre: #F5F3FF; --s-encre2: #B8BEE6; --s-trait: #2A3566;
+  --s-accent: #FFD166; --s-sur-accent: #0B1026; --s-ombre: #B98A1B; --s-vif: #FFD166;
+  --s-texte: "CMU Serif", "Latin Modern Roman", Georgia, serif; --s-ui: "CMU Sans Serif", "Segoe UI", system-ui, sans-serif;
+  --s-titre: 400 clamp(2.4rem, 1.3rem + 4.2vw, 4.4rem)/1.04 "CMU Serif", "Latin Modern Roman", Georgia, serif; --s-serrage: -0.01em;
+  --s-enseigne: italic 400 1.9rem "CMU Serif", Georgia, serif;
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 18%, #F5F3FF 50%, transparent 51%), radial-gradient(1px 1px at 31% 72%, #4CC9F0 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 47% 33%, #F5F3FF 50%, transparent 51%), radial-gradient(1px 1px at 58% 86%, #FFD166 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 69% 12%, #B49CFF 50%, transparent 51%), radial-gradient(1px 1px at 83% 58%, #F5F3FF 50%, transparent 51%),
+    radial-gradient(1.3px 1.3px at 92% 27%, #FF5CA8 50%, transparent 51%), radial-gradient(1px 1px at 6% 61%, #FFD166 50%, transparent 51%),
+    radial-gradient(1px 1px at 24% 42%, #F5F3FF 50%, transparent 51%), radial-gradient(1.2px 1.2px at 76% 91%, #F5F3FF 50%, transparent 51%); }
+.site-periple .chapo { font-size: 1.28rem; line-height: 1.5; }
+.site-periple .reperes { font-size: 1.05rem; }
+.demo-periple { border: 0; padding: 0; background: none; justify-items: center; text-align: center; }
+.polygones { width: min(100%, 21rem); height: auto; overflow: visible; }
+.polygones .dehors { fill: none; stroke: #FF5CA8; stroke-width: 1.3; opacity: .75; }
+.polygones .dedans { fill: none; stroke: #4CC9F0; stroke-width: 1.3; opacity: .6; }
+.polygones .cercle { fill: none; stroke: #4CC9F0; stroke-width: 2.6; }
+.polygones .diametre { stroke: #F5F3FF; stroke-width: 1; stroke-dasharray: 4 5; opacity: .6; }
+.polygones .centre { fill: #FFD166; }
+.demo-periple .reglage input, .demo-sesame .reglage input { margin-top: 0; }
+.demo-periple .reglage { display: grid; width: min(100%, 21rem); grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 1rem; font-size: 1.1rem; white-space: nowrap; }
+.encadrement { margin: 0; font: 700 clamp(1.5rem, 1rem + 2.2vw, 2.3rem)/1.2 "CMU Serif", Georgia, serif; color: #8F97CF; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.encadrement b { color: #FFD166; }
+.encadrement i { color: #F5F3FF; font-weight: 400; padding: 0 .1em; }
+.encadrement span { font-weight: 400; padding: 0 .15em; }
+.demo-periple .legende { max-width: 22rem; font-size: 1.1rem; }
+
+/* ---------- Sésame ---------- */
+.site-sesame { --s-fond: #0C2028; --s-carte: #153540; --s-encre: #F3EBD8; --s-encre2: #A9BDC2; --s-trait: #2B4A55;
+  --s-accent: #D9A441; --s-sur-accent: #0C2028; --s-ombre: #9A7222; --s-vif: #D9A441;
+  --s-texte: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --s-titre: 700 clamp(2.4rem, 1.3rem + 4.2vw, 4.3rem)/1.02 "Zilla Slab", Rockwell, serif; --s-serrage: -0.02em;
+  --s-enseigne: 700 1.7rem "Zilla Slab", Rockwell, serif;
+  background-image: repeating-linear-gradient(90deg, rgba(243, 235, 216, .035) 0 1px, transparent 1px 3.2rem); }
+.demo-sesame { border-top: 5px solid #D9A441; border-radius: 4px 4px 18px 18px; }
+.champ { display: grid; gap: .5rem; font: 700 1rem "IBM Plex Sans", sans-serif; color: #A9BDC2; }
+.champ input { width: 100%; background: #0C2028; color: #F3EBD8; border: 1px solid #2B4A55; border-radius: 10px; padding: .7rem .9rem;
+  font: 700 1.05rem "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .14em; }
+.demo-sesame .reglage { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 1rem; color: #A9BDC2; white-space: nowrap; }
+.demo-sesame .reglage output { font: 700 1.3rem "IBM Plex Mono", ui-monospace, monospace; display: inline-block; min-width: 1.4em; }
+.chiffre { margin: 0; min-height: 2.8em; color: #E5B95C; font: 700 clamp(1.25rem, .9rem + 1.6vw, 1.9rem)/1.4 "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .14em; overflow-wrap: anywhere; }
+
+/* ---------- Diaporamas et professeurs ---------- */
+.bloc { max-width: var(--large); margin: 0 auto; padding: clamp(3rem, 7vw, 5rem) var(--marge) 0; }
+.bloc h2 { margin: 0 0 .6rem; font: 800 clamp(1.7rem, 1.2rem + 1.8vw, 2.5rem)/1.1 "Bricolage Grotesque", "Trebuchet MS", sans-serif; letter-spacing: -0.02em; }
+.bloc-chapo { margin: 0 0 1.5rem; color: var(--encre2); max-width: 36rem; }
+.diapos { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--trait); }
+.diapos a { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: 1rem; align-items: baseline; padding: 1.1rem 0; border-bottom: 1px solid var(--trait); text-decoration: none; }
+.diapo-niveau { color: var(--encre2); }
+.diapo-titre { font-weight: 700; font-size: clamp(1.15rem, 1rem + .8vw, 1.5rem); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .2em; text-decoration-color: var(--trait); }
+.diapos a:hover .diapo-titre { text-decoration-color: currentColor; }
+.prof { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: clamp(1.5rem, 5vw, 4rem); align-items: start; margin-top: 1.2rem; }
+.prof-texte p { margin: 0 0 1rem; max-width: 38rem; color: var(--encre2); }
+.espaces { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--trait); }
+.espaces a { display: block; padding: .8rem 0 .8rem 1.3rem; border-bottom: 1px solid var(--trait); font-weight: 700; text-decoration: none; position: relative; }
+.espaces a::before { content: ""; position: absolute; left: 0; top: 1.32em; width: .6rem; height: .6rem; border-radius: 50%; background: var(--mue); }
+.espaces li:nth-child(2) a::before { background: var(--synapse); }
+.espaces li:nth-child(3) a::before { background: var(--periple); }
+.espaces li:nth-child(4) a::before { background: var(--sesame); }
+.espaces a:hover { text-decoration: underline; text-underline-offset: .2em; }
+.pied { max-width: var(--large); margin: 0 auto; padding: clamp(3rem, 7vw, 5rem) var(--marge) 3rem; color: var(--encre2); font-size: .98rem; }
+.pied p { margin: 0; }
+
+.introuvable { max-width: 36rem; margin: 0 auto; padding: 18vh var(--marge); }
+.introuvable h1 { font: 800 clamp(2rem, 1.2rem + 4vw, 3.4rem)/1.05 "Bricolage Grotesque", "Trebuchet MS", sans-serif; letter-spacing: -0.02em; margin: 0 0 1rem; }
+.introuvable .bouton { --s-accent: var(--mue); --s-sur-accent: var(--page); --s-ombre: transparent; font-family: var(--atkinson); }
+
+/* ---------- Petits écrans ---------- */
+@media (max-width: 860px) {
+  .site-int { grid-template-columns: minmax(0, 1fr); }
+  .site-int.inverse .site-texte { order: 0; }
+  .prof { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 620px) {
+  .verbe { grid-template-columns: minmax(0, 1fr); padding: .35rem 0 .7rem; }
+  .quoi { justify-self: start; text-align: left; padding: 0; max-width: none; }
+  .neurone-corps { grid-template-columns: minmax(0, 1fr); }
+  .neurone-fig { max-width: 11rem; justify-self: center; }
+  .diapos a { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
+  .console { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; }
+}
