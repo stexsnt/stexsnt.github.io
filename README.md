@@ -20,6 +20,7 @@ Tout le site est dans `public/`, en fichiers statiques, sans dépendance :
 - `portail.js` : les quatre essais (boucle `for`, neurone, polygones d'Archimède, chiffre de César).
 - `polices/` : les polices des quatre sites, servies par le portail (licence SIL Open Font License).
 - `nombre-derive/`, `recurrence/` : les diaporamas, inchangés.
+- `pyodide/` : l'interpréteur Python partagé par les quatre sites (voir `pyodide/LISEZ-MOI.txt`).
 
 ## Publication
 

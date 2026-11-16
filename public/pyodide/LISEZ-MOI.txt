@@ -1,0 +1,7 @@
+Pyodide 314.0.7 (interpréteur Python pour le navigateur), copié tel quel depuis le paquet npm "pyodide".
+Projet : https://pyodide.org — Licence : Mozilla Public License 2.0.
+
+Cette copie est partagée par Mue, Synapse, Périple et Sésame : un élève qui utilise plusieurs sites
+ne télécharge Python qu'une fois. Chaque site garde sa propre copie de secours dans son dossier pyodide/.
+Pour changer de version : remplacer les fichiers ici et dans les quatre sites, puis changer le nom
+du cache partagé (CACHE_PY) dans le fichier sw.js de chaque site.
