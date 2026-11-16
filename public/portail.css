@@ -179,6 +179,8 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--s-vif, var(--s
 .diapos a:hover .diapo-titre { text-decoration-color: currentColor; }
 .prof { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: clamp(1.5rem, 5vw, 4rem); align-items: start; margin-top: 1.2rem; }
 .prof-texte p { margin: 0 0 1rem; max-width: 38rem; color: var(--encre2); }
+.prof-listes h3 { margin: 0 0 .5rem; font: 400 1rem var(--atkinson); color: var(--encre2); }
+.prof-listes .espaces + h3 { margin-top: 1.8rem; }
 .espaces { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--trait); }
 .espaces a { display: block; padding: .8rem 0 .8rem 1.3rem; border-bottom: 1px solid var(--trait); font-weight: 700; text-decoration: none; position: relative; }
 .espaces a::before { content: ""; position: absolute; left: 0; top: 1.32em; width: .6rem; height: .6rem; border-radius: 50%; background: var(--mue); }
