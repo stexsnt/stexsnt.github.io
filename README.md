@@ -33,3 +33,10 @@ Astro ne sert qu'à publier le contenu de `public/` : chaque envoi sur la branch
 
 Un diaporama : déposer son dossier dans `public/`, puis ajouter une ligne à la liste `.diapos` de `index.html`.
 Un site : copier une bande `<section class="site …">` dans `index.html` et lui donner son bloc de couleurs dans `portail.css`.
+
+## Fichiers communs aux quatre sites
+
+`js/moteur.js`, `js/confort.js`, `js/prof-plus.js` et `js/qrcode.min.js` sont identiques dans les quatre dépôts.
+Après une correction dans l'un d'eux, la recopier dans les trois autres, puis vérifier :
+
+    node outils/verifier-communs.mjs
