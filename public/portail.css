@@ -24,10 +24,9 @@
   --marge: clamp(1.25rem, 5vw, 4.5rem);
   --large: 74rem;
 }
-@media (prefers-color-scheme: dark) {
-  :root { --page: #0D1322; --encre: #EDF0F8; --encre2: #A9B3CC; --trait: #2A3350;
-    --mue: #3CCB96; --synapse: #A9A5FF; --periple: #F5F3FF; --sesame: #E5B95C; }
-}
+/* Thème sombre : choisi par le bouton en haut à droite, sinon par le réglage de l'appareil (voir portail.js). */
+[data-theme="sombre"] { --page: #0D1322; --encre: #EDF0F8; --encre2: #A9B3CC; --trait: #2A3350;
+  --mue: #3CCB96; --synapse: #A9A5FF; --periple: #F5F3FF; --sesame: #E5B95C; color-scheme: dark; }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
@@ -37,8 +36,13 @@ a { color: inherit; }
 .evitement { position: absolute; left: -999rem; top: 0; background: var(--encre); color: var(--page); padding: .6rem 1rem; z-index: 5; }
 .evitement:focus { left: .5rem; top: .5rem; }
 
+/* ---------- Bouton de thème ---------- */
+.haut { max-width: var(--large); margin: 0 auto; padding: 1rem var(--marge) 0; display: flex; justify-content: flex-end; }
+#btn-theme { font: 700 .95rem var(--atkinson); color: var(--encre); background: none; border: 1.5px solid var(--trait); border-radius: 999px; padding: .45rem 1rem; cursor: pointer; }
+#btn-theme:hover { border-color: var(--encre); }
+
 /* ---------- Ouverture : quatre verbes, quatre polices ---------- */
-.ouverture { max-width: var(--large); margin: 0 auto; padding: clamp(2rem, 5vw, 3.75rem) var(--marge) clamp(2.5rem, 6vw, 4rem); }
+.ouverture { max-width: var(--large); margin: 0 auto; padding: clamp(1rem, 3vw, 2rem) var(--marge) clamp(2.5rem, 6vw, 4rem); }
 .amorce { margin: 0 0 clamp(1.25rem, 3vw, 2rem); font-size: clamp(1.1rem, 1rem + .6vw, 1.4rem); color: var(--encre2); max-width: 40rem; }
 .verbes { margin: 0; font-size: inherit; font-weight: inherit; display: grid; }
 .verbe { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); align-items: baseline; column-gap: clamp(1rem, 3vw, 2.5rem);
@@ -189,7 +193,7 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--s-vif, var(--s
 .espaces li:nth-child(4) a::before { background: var(--sesame); }
 .espaces a:hover { text-decoration: underline; text-underline-offset: .2em; }
 .pied { max-width: var(--large); margin: 0 auto; padding: clamp(3rem, 7vw, 5rem) var(--marge) 3rem; color: var(--encre2); font-size: .98rem; }
-.pied p { margin: 0; }
+.pied p { margin: 0 0 .4rem; }
 
 .introuvable { max-width: 36rem; margin: 0 auto; padding: 18vh var(--marge); }
 .introuvable h1 { font: 800 clamp(2rem, 1.2rem + 4vw, 3.4rem)/1.05 "Bricolage Grotesque", "Trebuchet MS", sans-serif; letter-spacing: -0.02em; margin: 0 0 1rem; }
@@ -213,3 +217,26 @@ input[type="range"] { width: 100%; margin: 0; accent-color: var(--s-vif, var(--s
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; }
 }
+
+/* ---------- Thème sombre : Mue et Synapse prennent les couleurs de leur propre mode nuit ---------- */
+[data-theme="sombre"] .site-mue { --s-fond: #0E1528; --s-carte: #172038; --s-encre: #E9EEF9; --s-encre2: #A9B5CE; --s-trait: #2B3756;
+  --s-accent: #3CCB96; --s-sur-accent: #06231A; --s-ombre: #1F8A63; }
+[data-theme="sombre"] .site-mue .enseigne path { stroke: #3CCB96; }
+[data-theme="sombre"] .editeur { background: #1A2545; border: 1px solid #2B3756; }
+[data-theme="sombre"] .console { border-color: #2B3756; color: #3CCB96; }
+[data-theme="sombre"] .site-synapse { --s-fond: #12142B; --s-carte: #1C1F42; --s-encre: #ECEBFA; --s-encre2: #B1B4D6; --s-trait: #33376A;
+  --s-accent: #948DFF; --s-sur-accent: #12142B; --s-ombre: #5D56C9; }
+[data-theme="sombre"] .site-synapse .enseigne path { stroke: #ECEBFA; }
+[data-theme="sombre"] .demo-synapse .demo-titre { color: #ECEBFA; }
+[data-theme="sombre"] .neurone-fig line { stroke: #4A4F86; }
+[data-theme="sombre"] .neurone-fig line[data-signe="plus"] { stroke: #948DFF; }
+[data-theme="sombre"] .neurone-fig line[data-signe="moins"] { stroke: #FF8482; }
+[data-theme="sombre"] .neurone-fig .entree { fill: #1C1F42; stroke: #ECEBFA; }
+[data-theme="sombre"] .neurone-fig text { fill: #ECEBFA; }
+[data-theme="sombre"] .neurone-fig .noyau { fill: #1F8F97; }
+[data-theme="sombre"] .verite th { color: #B1B4D6; border-bottom-color: #33376A; }
+[data-theme="sombre"] .verite td { border-bottom-color: #2A2D58; }
+[data-theme="sombre"] .verite td b { background: #2A2D58; color: #B1B4D6; }
+[data-theme="sombre"] .verite tr.actif td b { background: #948DFF; color: #12142B; }
+[data-theme="sombre"] .verdict { color: #B1B4D6; }
+[data-theme="sombre"] .verdict[data-etat="reussi"] { color: #4FD1C5; }

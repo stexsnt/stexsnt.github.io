@@ -5,6 +5,19 @@
   const fr = (x, d) => x.toFixed(d).replace(".", ",");
   const signe = n => (n >= 0 ? "+" + n : "−" + Math.abs(n));
 
+  /* ---------- Thème clair ou sombre ---------- */
+  (function theme() {
+    const b = $("btn-theme"), racine = document.documentElement;
+    if (!b) return;
+    const maj = () => { const sombre = racine.dataset.theme === "sombre"; b.setAttribute("aria-pressed", sombre); b.textContent = sombre ? "Thème clair" : "Thème sombre"; };
+    b.addEventListener("click", () => {
+      racine.dataset.theme = racine.dataset.theme === "sombre" ? "clair" : "sombre";
+      try { localStorage.setItem("portail.theme", racine.dataset.theme); } catch (e) { /* stockage indisponible */ }
+      maj();
+    });
+    maj();
+  })();
+
   /* ---------- Mue : une boucle for ---------- */
   (function mue() {
     const curseur = $("mue-n"), code = $("mue-n-code"), sortie = $("mue-sortie");
